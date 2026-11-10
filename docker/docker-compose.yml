@@ -1,37 +1,51 @@
-# Dual-mode (Docker): Axum-сервер + sidecar Ollama.
-# Данные приложения: named volume `/data` (`StorageRoot` чатов).
+# Dual-mode (Docker): Axum server + bundled React SPA.
+# Ollama is intentionally NOT part of this stack: the app connects to an
+# externally-managed Ollama instance. The URL is taken from UI settings,
+# with OLLAMA_BASE_URL as the default fallback.
 
 services:
   server:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      # SPA Bearer = server secret (default Dockerfile тоже `dev-change-me`).
+      # SPA Bearer must match UNDERLATOR_AUTH_TOKEN baked into the frontend.
+      # NOTE: changing this requires a rebuild (docker compose up --build).
       args:
         VITE_BACKEND_TOKEN: ${UNDERLATOR_AUTH_TOKEN:-dev-change-me}
         VITE_BACKEND_MODE: http
+    image: underlator:latest
+    container_name: underlator
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      # Variable: host port for the Underlator UI/API.
+      # Change the left side (e.g. "3000:8080") if 8080 is already taken on the host.
+      - "${UNDERLATOR_HOST_PORT:-8080}:8080"
     environment:
       UNDERLATOR_DATA_DIR: /data
       UNDERLATOR_BIND: 0.0.0.0:8080
       UNDERLATOR_STATIC_DIR: /app/static
-      OLLAMA_BASE_URL: http://ollama:11434
-      # Dev-default shared secret. Смените перед публичным продом:
-      # без token процесс с bind 0.0.0.0 не стартует (fail-closed).
-      UNDERLATOR_AUTH_TOKEN: ${UNDERLATOR_AUTH_TOKEN:-dev-change-me}
-    volumes:
-      - underlator-data:/data
-    depends_on:
-      - ollama
 
-  ollama:
-    image: ollama/ollama:latest
-    # Порт sidecar только во внутренней сети compose (`OLLAMA_BASE_URL=http://ollama:11434`).
-    # Не публикуем :11434 на host — часто занят локальным Ollama; для отладки: podman exec.
+      # Variable: default Ollama URL, used when the user has not set one
+      # in the app settings. Point this at your externally-running Ollama.
+      # Typical values:
+      #   http://host.docker.internal:11434   # Ollama on the Docker host
+      #   http://172.17.0.1:11434             # Docker bridge gateway (Linux)
+      #   http://ollama.example.com:11434     # Remote Ollama server
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+      # Shared secret between SPA and server. With bind 0.0.0.0 the process
+      # refuses to start without a token (fail-closed). Change before public
+      # deployment and rebuild the image so VITE_BACKEND_TOKEN matches.
+      UNDERLATOR_AUTH_TOKEN: ${UNDERLATOR_AUTH_TOKEN:-dev-change-me}
+
+    extra_hosts:
+      # Makes "host.docker.internal" resolve on Linux too (Docker Desktop
+      # already provides it natively). Handy when Ollama runs on the host.
+      - "host.docker.internal:host-gateway"
+
     volumes:
-      - ollama-data:/root/.ollama
+      # Persistent storage for chats / app data (StorageRoot).
+      - underlator-data:/data
 
 volumes:
   underlator-data:
-  ollama-data:
