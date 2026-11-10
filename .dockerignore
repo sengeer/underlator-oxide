@@ -1,7 +1,7 @@
 target
 **/node_modules
 .git
-.cursor
+.cline
 openspec
 electron-app
 **/*.md

@@ -6,6 +6,7 @@
 .DS_Store
 .roo
 .cursor
+.cline
 target/
 target-agent/
 *.log
