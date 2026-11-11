@@ -31,6 +31,7 @@ import { useAppLaunches } from '../hooks/use-app-launches';
 // TODO(splash): вернуть после реализации splash lifecycle в rust-core/desktop
 // import { selectSplashVisible } from '../models/splash-screen-ipc-slice';
 // import SplashScreen from './splash-screen';
+import About from './about';
 import Donation from './donation';
 import '../styles/main.scss';
 
@@ -87,6 +88,11 @@ function Main() {
   // Получение состояния видимости модального окна доната из Redux store
   const isOpenDonationPopup = useSelector((state) =>
     isElementOpen(state, 'donationPopup')
+  );
+
+  // Получение состояния видимости модального окна о проекте из Redux store
+  const isOpenAboutPopup = useSelector((state) =>
+    isElementOpen(state, 'aboutPopup')
   );
 
   // Хук для отслеживания открытий приложения и показа модального окна доната
@@ -181,6 +187,11 @@ function Main() {
         isOpened={shouldShowPopup || isOpenDonationPopup}
         setOpened={handleCloseDonationPopup}
         onDonate={handleDonate}
+      />
+      {/* Модальное окно о проекте */}
+      <About
+        isOpened={isOpenAboutPopup}
+        setOpened={() => dispatch(closeElement('aboutPopup'))}
       />
     </main>
   );

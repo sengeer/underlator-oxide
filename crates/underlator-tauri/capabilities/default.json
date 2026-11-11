@@ -20,6 +20,7 @@
     "allow-chat-update",
     "allow-chat-delete",
     "allow-chat-list",
-    "allow-chat-add-message"
+    "allow-chat-add-message",
+    "opener:default"
   ]
 }

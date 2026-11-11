@@ -62,8 +62,7 @@ function useCopying() {
       try {
         await navigator.clipboard.writeText(output);
         success = true;
-      } catch (err) {
-        console.error('Clipboard API failed, trying fallback...', err);
+      } catch (error) {
         success = fallbackCopyTextToClipboard(output);
       }
     } else {

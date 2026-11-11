@@ -125,6 +125,10 @@ msgstr "Внутренняя ошибка приложения"
 msgid " file is attached!"
 msgstr " прикреплен!"
 
+#: src/widgets/settings/ui/settings.tsx
+msgid "about"
+msgstr "О проекте"
+
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "About Underlator"
 msgstr "О Underlator"
@@ -152,6 +156,10 @@ msgstr "Ассистент"
 #: src/widgets/chat/ui/chat.tsx
 msgid "attach file"
 msgstr "Прикрепить файл"
+
+#: src/pages/main/ui/about.tsx
+msgid "author:"
+msgstr "Автор:"
 
 #: src/shared/ui/selector-option/bar-mode.tsx
 msgid "B"
@@ -189,17 +197,13 @@ msgstr "Чаты"
 msgid "chinese"
 msgstr "Китайский"
 
-#: src/widgets/settings/ui/settings.tsx
-msgid "chunk size"
-msgstr "Размер чанка"
-
-#: src/widgets/settings/ui/settings.tsx
-msgid "contact"
-msgstr "Связаться"
-
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Contact"
 msgstr "Связаться"
+
+#: src/pages/main/ui/about.tsx
+msgid "contact:"
+msgstr "Связаться:"
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Copy"
@@ -274,6 +278,10 @@ msgstr "Модели эмбеддингов не найдены"
 msgid "english"
 msgstr "Английский"
 
+#: src/pages/main/ui/about.tsx
+msgid "Error Tauri opener"
+msgstr "Ошибка Tauri opener"
+
 #: src/widgets/chat/ui/chat.tsx
 msgid "Error when selecting a file"
 msgstr "Ошибка при выборе файла"
@@ -281,10 +289,6 @@ msgstr "Ошибка при выборе файла"
 #: src/widgets/chat/ui/chat-sidebar.tsx
 msgid "Failed to delete chat"
 msgstr "Не удалось удалить чат"
-
-#: src/widgets/chat/ui/chat-sidebar.tsx
-msgid "Failed to delete document collection"
-msgstr "Не удалось удалить коллекцию документов"
 
 #: src/widgets/pdf-viewer/ui/custom-error-message.tsx
 msgid "failed to load PDF file"
@@ -400,10 +404,6 @@ msgid "malay"
 msgstr "Малайский"
 
 #: src/widgets/settings/ui/settings.tsx
-msgid "manage embedding models"
-msgstr "Управление моделями эмбеддингов"
-
-#: src/widgets/settings/ui/settings.tsx
 msgid "manage models"
 msgstr "Управление моделями"
 
@@ -418,10 +418,6 @@ msgstr "МБ"
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Menu"
 msgstr "Меню"
-
-#: src/widgets/settings/ui/settings.tsx
-msgid "model"
-msgstr "Модель"
 
 #: src/widgets/settings/ui/manage-models.tsx
 msgid "Model..."
@@ -444,13 +440,8 @@ msgid "no chats found"
 msgstr "Чаты не найдены"
 
 #: src/widgets/settings/ui/settings.tsx
-#: src/widgets/settings/ui/settings.tsx
 msgid "no model selected"
 msgstr "Модель не выбрана"
-
-#: src/widgets/settings/ui/settings.tsx
-msgid "number of top results"
-msgstr "Количество топ результатов"
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "ok!"
@@ -504,10 +495,6 @@ msgstr "Провайдер"
 msgid "Quit"
 msgstr "Закрыть Underlator"
 
-#: src/widgets/settings/ui/settings.tsx
-msgid "RAG configuration"
-msgstr "RAG конфигурация"
-
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "RAM"
 msgstr "ОЗУ"
@@ -548,10 +535,6 @@ msgstr "Отправить"
 #: src/widgets/chat/ui/chat-messages.tsx
 msgid "Send a message to start chatting with the assistant"
 msgstr "Отправьте сообщение, чтобы начать общение с ассистентом"
-
-#: src/widgets/settings/ui/settings.tsx
-msgid "similarity threshold"
-msgstr "Порог сходства"
 
 #: src/shared/lib/hooks/use-translation-languages/use-translation-languages.ts
 msgid "spanish"

@@ -158,7 +158,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ className = '' }) => {
   return (
     <div className={containerClasses} data-status={splashState.status?.status}>
       {/* Логотип с анимацией */}
-      <img src={logo} alt='Underlator' className='splash-screen__logo' />
+      <img src={logo} alt='Underlator logo' className='splash-screen__logo' />
 
       {/* Cтатус */}
       <div className='splash-screen__text splash-screen__text_color_foreground'>

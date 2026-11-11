@@ -27,8 +27,8 @@ import CableIcon from '../../../shared/assets/icons/cable-icon';
 import CommitIcon from '../../../shared/assets/icons/commit-icon';
 import DownloadIcon from '../../../shared/assets/icons/download-icon';
 import HttpIcon from '../../../shared/assets/icons/http-icon';
+import InfoIcon from '../../../shared/assets/icons/info-icon';
 import LanguageIcon from '../../../shared/assets/icons/language-icon';
-import MailIcon from '../../../shared/assets/icons/mail-icon';
 // import TextIncreaseIcon from '../../../shared/assets/icons/text-increase-icon';
 // import TrophyIcon from '../../../shared/assets/icons/trophy-icon';
 import UnderlatorIcon from '../../../shared/assets/icons/underlator-icon';
@@ -89,13 +89,7 @@ function Settings() {
    * Инициализация формы с react-hook-form.
    * Использует значения по умолчанию из Redux store.
    */
-  const {
-    register,
-    watch,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<SettingsFormData>({
+  const { register, watch, reset, setValue } = useForm<SettingsFormData>({
     defaultValues: {
       url: settings[provider]?.url || '',
       model: settings[provider]?.model || '',
@@ -107,51 +101,6 @@ function Settings() {
     },
     mode: 'onChange',
   });
-
-  /**
-   * Создает обработчик onChange с жёсткой валидацией для числовых полей.
-   * Автоматически обрезает значение до допустимого диапазона.
-   *
-   * @param fieldName - Имя поля формы
-   * @param min - Минимальное значение
-   * @param max - Максимальное значение
-   * @returns Объект с обработчиками для register
-   */
-  const createNumberFieldRegister = (
-    fieldName: keyof SettingsFormData,
-    min: number,
-    max: number
-  ) => {
-    return register(fieldName, {
-      required: `${fieldName} is required`,
-      min,
-      max,
-      valueAsNumber: true,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        // Разрешает пустую строку для возможности очистки поля
-        if (value === '') {
-          return;
-        }
-        const numValue = parseFloat(value);
-        // Если значение не число, игнорирует ввод
-        if (isNaN(numValue)) {
-          e.target.value = '';
-          setValue(fieldName, '');
-          return;
-        }
-        // Обрезает значение до допустимого диапазона
-        const clampedValue = Math.max(min, Math.min(max, numValue));
-        if (clampedValue !== numValue) {
-          e.target.value = String(clampedValue);
-          setValue(fieldName, String(clampedValue), { shouldValidate: true });
-        }
-      },
-    });
-  };
-
-  // Отслеживает изменения всех полей формы
-  const formValues = watch();
 
   /**
    * Ключ языка для отображения в интерфейсе.
@@ -393,11 +342,9 @@ function Settings() {
           <CommitIcon />
         </TextAndIconButton>
         <TextAndIconButton
-          text={t`contact`}
-          onClick={() => {
-            window.electron.openMail('fox8911@gmail.com');
-          }}>
-          <MailIcon />
+          text={t`about`}
+          onClick={() => dispatch(openElement('aboutPopup'))}>
+          <InfoIcon />
         </TextAndIconButton>
       </div>
       <h2 className='text-heading-l settings__title'>

@@ -56,6 +56,7 @@ fn run_tauri() {
 
     tracing::info!(core = CRATE_NAME, "запуск Tauri 2 host (MVP commands)");
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let config = DesktopConfig::from_env();
             let app_data = app
