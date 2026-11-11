@@ -381,7 +381,7 @@ function Settings() {
 
   return (
     <section className='settings'>
-      {import.meta.env.VITE_SHOW_TESTS && <Tests />}
+      {import.meta.env.DEV && <Tests />}
 
       <div className='settings__header'>
         <TextAndIconButton
