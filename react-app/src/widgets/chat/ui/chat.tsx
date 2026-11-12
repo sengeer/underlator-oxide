@@ -382,7 +382,7 @@ function Chat() {
               <MenuIcon />
             </TextAndIconButton>
             <p className='text-body-m chat__chat-info'>
-              {activeChat.chat ? activeChat.chat.title : '...'}
+              {activeChat.chat && activeChat.chat.title}
             </p>
           </div>
         </div>
