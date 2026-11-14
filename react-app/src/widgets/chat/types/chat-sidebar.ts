@@ -10,6 +10,8 @@ import type { ChatFile } from '../../../shared/apis/chat-ipc/types/chat-ipc';
  * Пропсы компонента ChatSidebar.
  */
 export interface ChatSidebarProps {
+  /** Флаг расширения котейнера в бок */
+  isExpanded: boolean;
   /** Список чатов для отображения */
   chats: ChatFile[];
   /** ID активного чата */

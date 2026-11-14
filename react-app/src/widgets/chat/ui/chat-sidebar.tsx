@@ -5,6 +5,7 @@
  */
 
 import { useLingui } from '@lingui/react/macro';
+import { motion } from 'motion/react';
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 // TODO(rag): restore ragIpc.deleteDocumentCollection when rust-core RAG lands
@@ -25,6 +26,7 @@ import '../styles/chat-sidebar.scss';
 const CHAT_ROW_CHUNK = 20;
 
 function ChatSidebar({
+  isExpanded,
   chats,
   activeChatId,
   isLoading = false,
@@ -148,7 +150,7 @@ function ChatSidebar({
     if (state.filteredChats.length > 0) return null;
 
     return (
-      <div className='empty-state'>
+      <div className='empty-state chat-sidebar__empty-state'>
         <h3 className='text-heading-l empty-state__title'>
           {state.searchQuery ? t`no chats found` : t`no chats`}
         </h3>
@@ -188,7 +190,17 @@ function ChatSidebar({
   });
 
   return (
-    <div className='chat-sidebar'>
+    <motion.div
+      className='chat-sidebar'
+      initial={false}
+      animate={{
+        width: isExpanded ? 'auto' : 0,
+        opacity: isExpanded ? 1 : 0,
+      }}
+      transition={{
+        duration: 0.25,
+        ease: [0.4, 0, 0.2, 1],
+      }}>
       <Search
         placeholder={t`Chat...`}
         value={state.searchQuery}
@@ -245,7 +257,7 @@ function ChatSidebar({
           <AddIcon />
         </IconButton>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

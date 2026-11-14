@@ -39,6 +39,7 @@
     "@types/react-redux": "^7.1.34",
     "@vitejs/plugin-react": "^4.3.4",
     "katex": "^0.16.25",
+    "motion": "^14.14.0",
     "pixelperfect-tool": "^1.9.2",
     "react": "^19.3.0-canary-fb2177c1-20251114",
     "react-dom": "^19.3.0-canary-fb2177c1-20251114",

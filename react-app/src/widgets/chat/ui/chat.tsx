@@ -362,17 +362,16 @@ function Chat() {
   return (
     <section className='chat'>
       {/* Боковая панель */}
-      {showSidebar ? (
-        <ChatSidebar
-          chats={chatsList.chats}
-          activeChatId={activeChat.chat?.id}
-          isLoading={chatsList.loading}
-          onCreateChat={handleCreateChat}
-          onSelectChat={handleSelectChat}
-          onDeleteChat={handleDeleteChat}
-          onRefreshChats={handleLoadChats}
-        />
-      ) : null}
+      <ChatSidebar
+        isExpanded={showSidebar}
+        chats={chatsList.chats}
+        activeChatId={activeChat.chat?.id}
+        isLoading={chatsList.loading}
+        onCreateChat={handleCreateChat}
+        onSelectChat={handleSelectChat}
+        onDeleteChat={handleDeleteChat}
+        onRefreshChats={handleLoadChats}
+      />
 
       {/* Основная область */}
       <div className='chat__main'>
