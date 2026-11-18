@@ -1,0 +1,147 @@
+# Spec Delta
+
+## REMOVED Requirements
+
+### Requirement: Electron transport keeps current desktop working
+
+**Reason**: Desktop Tauri и docker server покрывают MVP после закрытых gates 5.2 и 6.1–6.4; третий host-транспорт больше не поддерживается.
+
+**Migration**: Desktop-сборки MUST использовать Tauri-транспорт, browser/docker — HTTP. Явный legacy `VITE_BACKEND_MODE=electron` MUST завершаться понятной ошибкой конфигурации без сетевого fallback.
+
+## RENAMED Requirements
+
+### Requirement: BackendClient mirrors preload MVP surface
+
+FROM: BackendClient mirrors preload MVP surface
+TO: BackendClient exposes the core MVP surface
+
+## MODIFIED Requirements
+
+### Requirement: BackendClient mirrors preload MVP surface
+`react-app` SHALL предоставлять `BackendClient` с фасадами `model`, `catalog`, `chat` и 14 операциями MVP, канонически определёнными в `mvp-api-contract` и DTO `underlator-core`. Входные и выходные JSON-ключи MUST сохранить смешанный camelCase / snake_case без переименования. Успешные унарные ответы MUST быть телами контракта ядра без host-specific envelope. Клиент MUST NOT включать `rag.*` или `splash.*` в MVP surface.
+
+#### Scenario: Model catalog and chat operations are present
+- **WHEN** разработчик инспектирует публичный контракт `BackendClient`
+- **THEN** MUST быть все 14 операций карты MVP (`model:generate` … `chat:add-message`)
+- **AND** MUST быть подписки на события `model:generate-progress` и `model:install-progress`
+- **AND** MUST NOT быть методов `rag.*` или `splash.*`
+
+#### Scenario: Generate payload keys stay compatible
+- **WHEN** вызывается `model.generate`
+- **THEN** тело MUST содержать обязательные `model` и `prompt`, опциональные поля генерации (`system`, `temperature`, `max_tokens`, `num_predict`, `think`, `context`) и конфиг провайдера `id` / `url`
+- **AND** унарный успех MUST быть сконкатенированной строкой текста по контракту ядра
+
+### Requirement: Tauri transport is a typed client skeleton
+SHALL существовать типизированный Tauri-транспорт, чьи имена команд и событий MUST совпадать с картой ядра. Транспорт MUST выполнять рабочие `invoke` и `listen` против живого `underlator-tauri`, без silent fallback на другой host. Отсутствие Tauri runtime или незарегистрированной команды MUST завершаться явной ошибкой внутри выбранного транспорта.
+
+#### Scenario: Tauri command names follow the core map
+- **WHEN** разработчик инспектирует Tauri-транспорт
+- **THEN** каждая из 14 MVP-операций MUST отображаться на `tauri_command` из карты ядра
+- **AND** progress MUST слушаться по IPC-именам событий ядра
+
+#### Scenario: Live host invoke succeeds without HTTP fallback
+- **WHEN** выбран Tauri-транспорт, runtime доступен и host зарегистрировал MVP commands
+- **THEN** унарные операции и generate/install MUST идти через `invoke` / events host
+- **AND** `TauriTransport` MUST NOT выполнять `fetch` к `/api/model|catalog|chat` или обращаться к legacy host API
+
+#### Scenario: Unwired host does not fake success
+- **WHEN** выбран Tauri-транспорт, но runtime invoke недоступен или команда не зарегистрирована
+- **THEN** операция MUST завершиться классифицированной ошибкой
+- **AND** MUST NOT выполняться silent fallback на HTTP или иной транспорт внутри `TauriTransport`
+
+### Requirement: Transport is selected by flag or runtime detect
+Выбор транспорта SHALL учитывать явный `VITE_BACKEND_MODE` (`http` | `tauri`). Если флаг пуст, клиент MUST выбрать Tauri при наличии Tauri globals и HTTP иначе. Явный флаг MUST побеждать auto-detect. Legacy-значение `electron` MUST давать понятную ошибку конфигурации до создания клиента и до сетевых/IPC вызовов; silent fallback на HTTP или Tauri запрещён. Остальные runtime rules MUST NOT восстанавливать detect по legacy globals.
+
+#### Scenario: Explicit http mode wins
+- **WHEN** задано `VITE_BACKEND_MODE=http`
+- **THEN** MVP-вызовы MUST идти через HTTP-транспорт независимо от доступных runtime globals
+
+#### Scenario: Tauri is detected without flag
+- **WHEN** флаг режима пуст и доступны Tauri runtime globals (`__TAURI_INTERNALS__` и/или `__TAURI__`)
+- **THEN** MUST быть выбран Tauri-транспорт
+
+#### Scenario: Explicit tauri mode wins
+- **WHEN** задано `VITE_BACKEND_MODE=tauri`
+- **THEN** MVP-вызовы MUST идти через Tauri-транспорт
+- **AND** MUST NOT быть вызовов HTTP `/api/*` из этого выбора
+
+#### Scenario: Electron is detected without flag
+- **WHEN** воспроизводится прежняя среда с legacy host global, пустым флагом и без Tauri globals
+- **THEN** legacy global MUST быть проигнорирован и MUST быть выбран HTTP-транспорт
+- **AND** MUST NOT создаваться удалённый legacy transport или читаться его API
+
+#### Scenario: Default without hosts is HTTP
+- **WHEN** флаг режима пуст и Tauri globals отсутствуют
+- **THEN** MUST быть выбран HTTP-транспорт без чтения legacy host API
+
+#### Scenario: Removed explicit mode fails closed
+- **WHEN** задано `VITE_BACKEND_MODE=electron`
+- **THEN** создание клиента MUST завершиться ошибкой с указанием поддерживаемых режимов `http` / `tauri` и варианта пустого флага
+- **AND** MUST NOT быть HTTP, Tauri или legacy IPC вызова как скрытого fallback
+
+### Requirement: Existing generate and chat call sites use BackendClient
+`feature-provider`, `use-model`, chat API и settings model/catalog/test helpers SHALL выполнять MVP-операции через `BackendClient`. Активный React-код MUST NOT зависеть от глобальной декларации `Window.electron`. Conserved RAG/splash-заготовки MAY сохранять изолированный legacy access под `TODO(rag)` / `TODO(splash)`, но MUST NOT становиться транспортом MVP или живым обязательным путём UI.
+
+#### Scenario: Feature provider generate goes through the client
+- **WHEN** выполняется чат, инструкция, простой или контекстный перевод через `feature-provider`
+- **THEN** `generate` и подписка на прогресс MUST идти через `BackendClient.model`
+- **AND** активные обработчики MUST NOT обходить клиент через legacy host API
+
+#### Scenario: Use-model stop goes through the client
+- **WHEN** пользователь останавливает активную генерацию через `use-model`
+- **THEN** MUST вызываться `BackendClient.model.stop`
+
+#### Scenario: Chat CRUD goes through the client
+- **WHEN** slice, helper или виджет создаёт, читает, обновляет, удаляет чат или добавляет сообщение
+- **THEN** операция MUST выполняться через `BackendClient.chat` напрямую или через тонкую обёртку chat API
+- **AND** совместимые Redux-обёртки результатов MAY сохраняться без обхода клиента
+
+#### Scenario: MVP UI does not invoke live rag surfaces
+- **WHEN** пользователь работает в MVP UI на Tauri или HTTP
+- **THEN** видимые действия MUST NOT инициировать живые вызовы `rag.*`
+- **AND** код `rag.*` MAY оставаться с маркерами `TODO(rag)` и локальными legacy-типами
+
+#### Scenario: MVP UI does not wait on live splash surfaces
+- **WHEN** пользователь стартует MVP UI на Tauri или HTTP
+- **THEN** показ основного UI MUST NOT требовать `splash.*` lifecycle
+- **AND** код `splash.*` MAY оставаться с маркерами `TODO(splash)` и локальными legacy-типами
+
+#### Scenario: No global legacy host declaration is required
+- **WHEN** frontend компилируется после удаления legacy transport
+- **THEN** активный MVP-код и conserved modules MUST компилироваться без глобального `Window.electron`
+- **AND** conserved modules MUST сохранить свои маркеры и не потребовать BackendClient-операций вне MVP
+
+### Requirement: Widgets do not import transports
+Слой FSD widgets SHALL зависеть только от публичного `BackendClient` / shared API фасадов. Виджеты и pages MUST NOT импортировать конкретные transport-модули. Клиент catalog/model в settings MUST использовать shared-клиент, а не host globals.
+
+#### Scenario: Settings catalog does not touch transport modules
+- **WHEN** виджет settings загружает каталог, ставит или удаляет модель
+- **THEN** виджет MUST вызывать shared API / `BackendClient`
+- **AND** файл виджета MUST NOT импортировать HTTP или Tauri transport-модуль
+
+#### Scenario: Chat widget does not import transports
+- **WHEN** виджет chat выполняет CRUD через свой slice
+- **THEN** импорты виджета MUST NOT указывать на transport-модули
+- **AND** MUST оставаться допустимым импорт shared API / типов чата
+
+### Requirement: Change stays inside the React client atom
+Удаление legacy host SHALL сохранить публичную модель `BackendClient` для оставшихся HTTP/Tauri режимов и существующую FSD-структуру ipc-сегмента. Change MUST NOT добавлять Tauri commands, server routes, RAG/splash runtime, новые DTO или бизнес-логику ядра и MUST NOT откатывать реструктуризацию ipc-сегмента 6.3.
+
+#### Scenario: No host or DTO expansion
+- **WHEN** удаление legacy transport завершено
+- **THEN** `underlator-server` MVP paths и SSE-имена MUST остаться прежними
+- **AND** `underlator-tauri` MUST NOT получить новые MVP commands
+- **AND** JSON-ключи DTO ядра и операции `BackendClient` для HTTP/Tauri MUST остаться совместимыми
+
+### Requirement: BackendClient passes provider url for manage-models operations
+Публичный `BackendClient.model` SHALL принимать provider config (`id` / `url`) для `list`, `install`, `remove`; catalog-операции из manage-models MUST также прокидывать config, когда он задан в settings. HTTP и Tauri транспорты MUST сериализовать эти поля без отбрасывания. Hardcoded `Embedded Ollama` на границе клиента MUST NOT использоваться.
+
+#### Scenario: List install remove include settings url
+- **WHEN** settings содержат `Ollama` с url `http://127.0.0.1:11434` и id `ollama`, и UI вызывает list/install/remove через `BackendClient`
+- **THEN** исходящий запрос MUST содержать этот `url` и `id` (или эквивалент контракта)
+- **AND** MUST NOT подставляться Embedded Ollama как provider id
+
+#### Scenario: Catalog manage-models path forwards url
+- **WHEN** manage models загружает каталог через `BackendClient.catalog`
+- **THEN** клиент MUST передать url (+ id) из активных provider settings, если они заданы
+- **AND** виджеты MUST NOT импортировать транспорты напрямую
