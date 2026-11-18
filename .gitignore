@@ -10,6 +10,11 @@
 target/
 target-agent/
 *.log
+.agents
+.rules
+opencode.json
+.opencode
+.docs
 
 # Frontend / Electron build outputs
 dist/
