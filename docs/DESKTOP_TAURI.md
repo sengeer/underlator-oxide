@@ -2,15 +2,14 @@
 
 Документ для клонировавших репозиторий: как собрать и запустить **desktop**-хост Underlator на Tauri 2, какие native deps нужны, какие канонические артефакты получаются и что уже проверено на машинах.
 
-## Режимы: Desktop (Tauri) vs Docker (server) vs Electron
+## Официальные режимы: Desktop (Tauri) и Docker (server)
 
 | Режим | Host | Когда использовать |
 | --- | --- | --- |
-| **Desktop (Tauri)** | `crates/underlator-tauri` + `react-app` | Нативная сборка/запуск на Linux / macOS / Windows; цель dual-mode desktop после атома 5.1 |
+| **Desktop (Tauri)** | `crates/underlator-tauri` + `react-app` | Нативная сборка и запуск на Linux / macOS / Windows |
 | **Docker (server)** | `crates/underlator-server` + compose | Серверный HTTP/SSE host; UI через браузер к API |
-| **Electron (временно)** | `electron-app` + `react-app` | Текущий production desktop до атома **6.1**; **не** удалять, пока не закрыт gate 5.2 |
 
-До закрытия атома 5.2 (рабочий AppImage на Fedora Workstation 44 + этот документ для macOS/Windows) **запрещено** начинать выпил Electron / `ElectronTransport` / `electron-app` (атом 6.1).
+Gate 5.2 закрыт: канонический AppImage прошёл живой MVP smoke на Fedora Workstation 44, `acceptance-smoke.json` содержит `all_ok`, а macOS/Windows имеют задокументированные ниже фактические статусы. Это историческое подтверждение готовности desktop-поставки не добавляет третий поддерживаемый режим.
 
 ## Переменные окружения
 
@@ -234,12 +233,12 @@ Compress-Archive -Path dist-desktop\Underlator.exe -DestinationPath dist-desktop
 
 Статусы macOS/Windows **не** ослабляют Linux AppImage gate.
 
-## Gate перед атомом 6.1
+## Закрытый исторический gate 5.2
 
-Не начинать удаление Electron / `ElectronTransport` / `electron-app`, пока:
+Перед атомом 7.1 были подтверждены все доказательства gate:
 
-1. Канонический AppImage на **Fedora Workstation 44** прошёл живой MVP smoke vs локальный Ollama
-2. В репозитории есть этот документ с командами для macOS arm64 DMG и Windows portable zip
-3. Матрица выше заполнена (`verified` / `unverified`)
+1. Канонический AppImage на **Fedora Workstation 44** прошёл живой MVP smoke vs локальный Ollama; `acceptance-smoke.json` содержит `all_ok`
+2. Этот документ содержит команды для macOS arm64 DMG и Windows portable zip
+3. Матрица выше зафиксировала фактические статусы (`verified` / `unverified`)
 
-Атом 5.2 **сам** Electron не удаляет.
+Закрытый gate остаётся историческим доказательством поставки; он не заменяется `tauri dev` или unit/mock и не меняет текущую матрицу проверки.

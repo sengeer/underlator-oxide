@@ -3,5 +3,4 @@ target
 .git
 .cline
 openspec
-electron-app
 **/*.md

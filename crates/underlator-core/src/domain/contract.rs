@@ -6,7 +6,7 @@
 /// Описание одной MVP-операции.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ContractOp {
-    /// Имя Electron IPC.
+    /// Стабильный идентификатор IPC-операции в MVP-контракте.
     pub ipc: &'static str,
     /// Стабильный идентификатор use-case в core.
     pub use_case: &'static str,
@@ -21,7 +21,7 @@ pub struct ContractOp {
 /// Описание progress-события.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ContractEvent {
-    /// Имя Electron IPC-события.
+    /// Стабильное имя IPC-события в MVP-контракте.
     pub ipc_event: &'static str,
     /// Идентификатор события в core.
     pub core_name: &'static str,

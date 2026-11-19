@@ -51,12 +51,9 @@ describe('FSD: widgets/pages не импортируют transports', () => {
     for (const root of roots) {
       for (const file of walkTsFiles(root)) {
         const source = readFileSync(file, 'utf8');
-        if (
-          /from ['"][^'"]*shared\/api\/(?:ipc\/)?transports/.test(source) ||
-          /from ['"][^'"]*\/transports\/(http|electron|tauri)-transport/.test(
-            source
-          )
-        ) {
+        const transportImport =
+          /(?:from\s*|import\(\s*)['"][^'"]*transports\/[^'"]+['"]/;
+        if (transportImport.test(source)) {
           offenders.push(relative(reactAppRoot, file));
         }
       }

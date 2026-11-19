@@ -32,10 +32,10 @@ We welcome suggestions for improvements:
 
 2. **Follow code standards**:
    - New code should work in minimal time according to big-O notation
-   - In this project, we follow SOLID principles. For React (front-end), SOLID principles are implemented through functional programming: pure functions, composition, algebraic types, HOF, currying, and partial application. For Electron (back-end), SOLID principles are followed through classes
+   - Follow SOLID principles. For React (front-end), use functional programming: pure functions, composition, algebraic types, HOF, currying, and partial application. For Rust, use traits as boundaries and dependency inversion through ports
    - For React (front-end), follow the Feature-Sliced Design (FSD) architectural methodology and strictly adhere to its rules
-   - For Electron (back-end), follow the Service Layer Pattern architectural pattern
-   - Added code should be testable and maintainable
+   - Keep backend business logic in `crates/underlator-core` within the hexagonal layers `domain` / `ports` / `application` / `adapters/out`. `underlator-server` and `underlator-tauri` are thin driving adapters and must not contain domain rules
+   - Added code should be testable and maintainable; public Rust items require Russian-language rustdoc
 
 3. **Commit your changes** following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
    ```bash

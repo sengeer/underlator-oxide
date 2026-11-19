@@ -5,7 +5,7 @@
  * Пустой `VITE_BACKEND_MODE` означает runtime detect, а не HTTP.
  */
 interface ImportMetaEnv {
-  /** Явный режим: `http` | `electron` | `tauri`. Пусто = detect. */
+  /** Явный режим: `http` | `tauri`. Пусто или неизвестное значение = detect. */
   readonly VITE_BACKEND_MODE?: string;
   /** Base URL server (пусто = same-origin `/api/...`). */
   readonly VITE_BACKEND_URL?: string;

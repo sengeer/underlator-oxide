@@ -84,15 +84,25 @@ Host MAY содержать заготовки desktop-only поверхност
 - **THEN** отсутствие рабочего mailto / native dialog / splash runtime MUST NOT делать приёмку MVP неуспешной
 - **AND** исходники MUST NOT содержать обязательный runtime installer embedded Ollama как DoD этого атома
 
-### Requirement: Electron parity checklist for MVP scenarios
-Атом 5.1 SHALL зафиксировать чеклист сравнения поведения Tauri desktop с Electron на тех же MVP-сценариях `model` / `catalog` / `chat` (happy-path и основные ошибки). Полное удаление Electron / `ElectronTransport` / `electron-app` MUST NOT входить в скоуп. После атома 5.2 unit/mock host-тесты и успешный `cargo tauri dev` MUST NOT считаться заменой shipping-приёмки канонического AppImage на Fedora Workstation 44 (см. capability `desktop-tauri-build`); выпил Electron по-прежнему MUST ждать закрытия 5.2.
+### Requirement: Desktop MVP parity and live acceptance checklist
+До удаления legacy desktop transport SHALL быть зафиксирован live чеклист соответствия desktop Tauri каноническому MVP-контракту `model` / `catalog` / `chat`: happy-path, основные ошибки и persist. Приёмка MUST выполняться на реальном Tauri runtime против живого Ollama; unit/mock и статический анализ MUST NOT засчитываться как её замена. Доказательства закрытого AppImage gate 5.2 MUST предшествовать удалению.
 
 #### Scenario: Parity checklist covers MVP surfaces
-- **WHEN** DoD атома 5.1 выполняется
-- **THEN** MUST существовать явный чеклист (в tasks/приёмке) для generate/stop/install/remove/list, catalog get/search/info и chat CRUD/addMessage
-- **AND** MUST NOT требовать удаления `electron-app` или `ElectronTransport`
+- **WHEN** перед удалением legacy transport выполняется desktop Tauri smoke
+- **THEN** чеклист MUST записать pass/fail для generate с progress и финальным текстом, stop активной генерации, list, install/remove на безопасной тестовой модели, catalog get/search/getModelInfo и chat CRUD/addMessage/persist после перезапуска
+- **AND** отсутствие выполненного пункта MUST NOT считаться pass
+
+#### Scenario: Parity checklist covers primary errors
+- **WHEN** desktop Tauri получает недоступного провайдера/модель, unknown chat id или отменяемый stream
+- **THEN** чеклист MUST подтвердить классифицированную ошибку или cancellation без успешного фиктивного ответа
+- **AND** `getModelInfo` для отсутствующей модели MUST сохранить контрактное `null`, а не превращаться в ошибку «not found»
+
+#### Scenario: Live Tauri evidence is required before deletion
+- **WHEN** принимается решение завершить удаление legacy transport
+- **THEN** результаты живого Tauri smoke MUST быть записаны в acceptance/tasks с датой, способом запуска (`cargo tauri dev` или AppImage) и pass/fail по сценариям
+- **AND** зелёные unit/mock, host tests или TypeScript tests без такого smoke MUST NOT закрывать этот gate
 
 #### Scenario: Unit and tauri-dev do not waive AppImage shipping gate
-- **WHEN** оценивается готовность к атому 6.1 после 5.1
-- **THEN** наличие unit/mock тестов host или успешного `tauri dev` MUST NOT считаться закрытием shipping gate атома 5.2
-- **AND** MUST NOT начинать удаление Electron, пока `desktop-tauri-build` не принят на Fedora 44 AppImage smoke
+- **WHEN** инспектируются входные условия атома 7.1
+- **THEN** Fedora Workstation 44 AppImage MUST иметь ранее подтверждённый статус `verified` в матрице desktop docs
+- **AND** новая приёмка MUST NOT изменять статусы macOS/Windows или объявлять их verified без фактического запуска

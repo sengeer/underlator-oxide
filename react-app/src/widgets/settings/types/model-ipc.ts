@@ -213,7 +213,7 @@ export type ModelErrorCallback =
 
 /**
  * Конфигурация для API клиента.
- * Настройки для работы с Electron API.
+ * Настройки provider-neutral API-обёртки manage models.
  */
 export interface SettingsApiConfig {
   /** Таймаут для операций в миллисекундах */

@@ -6,6 +6,7 @@
 import { useLingui } from '@lingui/react/macro';
 import { useDispatch } from 'react-redux';
 import callANotificationWithALog from '../../utils/call-a-notification-with-a-log';
+import { getLegacyDesktopIpc } from './types/legacy-desktop-ipc';
 import { UseElectronTranslationReturn } from './types/use-electron-translation';
 
 /**
@@ -94,14 +95,12 @@ function useElectronTranslation(): UseElectronTranslationReturn {
    */
   async function translateElectron(): Promise<void> {
     try {
-      // Web / server: нет Electron IPC — не toast'им.
-      if (
-        typeof window === 'undefined' ||
-        !window.electron?.updateTranslations
-      ) {
+      // HTTP / Tauri: отсутствующий legacy bridge остаётся best-effort no-op.
+      const legacyDesktop = getLegacyDesktopIpc();
+      if (!legacyDesktop) {
         return;
       }
-      await window.electron.updateTranslations(translations);
+      await legacyDesktop.updateTranslations(translations);
     } catch (error) {
       callANotificationWithALog(dispatch, t`Failed to translate app`, error);
     }

@@ -187,7 +187,7 @@ export const TAURI_NAME_MAP = {
 } as const;
 
 /**
- * Транспорт Tauri: invoke + listen, без silent fallback на Electron/HTTP.
+ * Транспорт Tauri: invoke + listen, без silent fallback на другой host.
  */
 export class TauriTransport implements BackendClient {
   /** Фасад model. */

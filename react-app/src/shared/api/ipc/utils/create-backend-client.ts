@@ -3,7 +3,6 @@
  * Фабрика и ленивый singleton над выбранным транспортом.
  */
 
-import { ElectronTransport } from '../transports/electron-transport';
 import { HttpTransport } from '../transports/http-transport';
 import { TauriTransport } from '../transports/tauri-transport';
 import type { BackendClient } from '../types/backend-client';
@@ -19,11 +18,9 @@ let singleton: BackendClient | null = null;
 export function createBackendClient(): BackendClient {
   const mode = detectTransport();
   switch (mode) {
-    case 'electron':
-      return new ElectronTransport();
     case 'tauri':
       return new TauriTransport();
-    default:
+    case 'http':
       return new HttpTransport();
   }
 }

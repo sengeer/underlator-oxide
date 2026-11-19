@@ -1,16 +1,19 @@
 /**
  * @module RagIpcTest
- * Функции для ручного тестирования RAG IPC API.
- * Используется для проверки работы RAG Electron IPC эндпоинтов.
+ * Функции законсервированного ручного RAG helper; MVP generate идёт через BackendClient.
  *
  * TODO(rag): restore settings Tests UI wiring when rust-core RAG lands; модуль не удалять.
  */
 
+import { getBackendClient } from '../../../shared/api/ipc';
 import { ragIpc } from '../../../shared/apis/rag-ipc/';
 import {
   DEFAULT_RAG_CHUNK_SIZE,
   DEFAULT_RAG_MODEL,
 } from '../../../shared/lib/constants';
+import type { LegacySettingsRagApi } from './types/legacy-rag-ipc';
+
+const legacyRagApi: LegacySettingsRagApi = ragIpc;
 
 /**
  * Открывает диалог выбора PDF файла и обрабатывает его.
@@ -43,10 +46,14 @@ export async function testUploadAndProcessDocument(
 
       try {
         // Использует uploadAndProcessDocument для загрузки и обработки
-        const result = await ragIpc.uploadAndProcessDocument(file, chatId, {
-          chunkSize: DEFAULT_RAG_CHUNK_SIZE,
-          embeddingModel: DEFAULT_RAG_MODEL,
-        });
+        const result = await legacyRagApi.uploadAndProcessDocument(
+          file,
+          chatId,
+          {
+            chunkSize: DEFAULT_RAG_CHUNK_SIZE,
+            embeddingModel: DEFAULT_RAG_MODEL,
+          }
+        );
 
         console.log('✅ Результат обработки документа:', result);
         if (result.success) {
@@ -81,7 +88,7 @@ export async function testQueryDocuments(
   console.log(`💬 Чат ID: ${chatId}`);
 
   try {
-    const result = await ragIpc.queryDocuments(
+    const result = await legacyRagApi.queryDocuments(
       {
         query,
         chatId,
@@ -120,7 +127,7 @@ export async function testGetCollectionStats(chatId: string = 'test-chat-1') {
   console.log(`💬 Чат ID: ${chatId}`);
 
   try {
-    const result = await ragIpc.getCollectionStats(chatId);
+    const result = await legacyRagApi.getCollectionStats(chatId);
 
     console.log('✅ Результат получения статистики:', result);
     console.log(`📊 Количество точек: ${result.pointsCount}`);
@@ -144,7 +151,7 @@ export async function testListCollections() {
   console.log('🧪 Тестирование API получения списка коллекций...');
 
   try {
-    const result = await ragIpc.listCollections();
+    const result = await legacyRagApi.listCollections();
 
     console.log('✅ Результат получения списка коллекций:', result);
     console.log(`📊 Найдено коллекций: ${result.length}`);
@@ -171,7 +178,7 @@ export async function testDeleteCollection(chatId: string = 'test-chat-1') {
   console.log(`💬 Чат ID: ${chatId}`);
 
   try {
-    const result = await ragIpc.deleteDocumentCollection({
+    const result = await legacyRagApi.deleteDocumentCollection({
       chatId,
     });
 
@@ -196,7 +203,7 @@ export async function testProcessingProgress() {
   console.log('🧪 Тестирование API подписки на прогресс обработки...');
 
   try {
-    const unsubscribe = ragIpc.onProcessingProgress((progress: any) => {
+    const unsubscribe = legacyRagApi.onProcessingProgress((progress: any) => {
       console.log('📊 Прогресс обработки:', progress);
       console.log(`   Этап: ${progress.stage}`);
       console.log(`   Прогресс: ${progress.progress}%`);
@@ -285,7 +292,7 @@ export async function testGenerateWithRagContext(
 
   try {
     // Сначала ищет релевантные документы
-    const searchResult = await ragIpc.queryDocuments(
+    const searchResult = await legacyRagApi.queryDocuments(
       {
         query,
         chatId,
@@ -322,10 +329,10 @@ export async function testGenerateWithRagContext(
 
     // Генерирует ответ через model API
     try {
-      const response = await (window as any).electron.model.generate(
+      const response = await getBackendClient().model.generate(
         {
-          model: model,
-          prompt: prompt,
+          model,
+          prompt,
           temperature: 0.7,
           max_tokens: 2048,
         },
@@ -336,9 +343,9 @@ export async function testGenerateWithRagContext(
       );
 
       console.log('✅ Генерация завершена');
-      console.log('📝 Ответ модели:', response.data);
+      console.log('📝 Ответ модели:', response);
 
-      return { searchResult, prompt, modelResponse: response.data };
+      return { searchResult, prompt, modelResponse: response };
     } catch (error) {
       console.error('❌ Ошибка генерации модели:', error);
       console.log('💡 Созданный промпт для ручной генерации:', prompt);

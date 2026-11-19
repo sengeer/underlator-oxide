@@ -38,7 +38,7 @@ export function normalizeErrorClass(value: string): BackendErrorClass {
 
 /**
  * Собирает BackendError из HTTP JSON `{ class, message }`.
- * Без класса (Electron) — `internal`.
+ * Без класса — `internal`.
  *
  * @param body - Распарсенное тело ответа или envelope.
  * @param fallbackMessage - Сообщение, если в теле нет `message`.
@@ -81,47 +81,4 @@ export async function backendErrorFromResponse(
   } catch {
     return new BackendError('internal', text || fallback);
   }
-}
-
-/**
- * Разворачивает Electron `IpcResponse` в DTO.
- * Строка generate (старый формат) возвращается как есть.
- *
- * @param response - Сырой ответ preload.
- * @returns Тело DTO или строка generate.
- */
-export function unwrapIpcResponse<T>(response: unknown): T {
-  if (typeof response === 'string') {
-    return response as T;
-  }
-  if (isIpcEnvelope(response)) {
-    if (!response.success) {
-      throw backendErrorFromBody(
-        { message: response.error },
-        String(response.error ?? 'IPC operation failed')
-      );
-    }
-    if ('data' in response) {
-      return response.data as T;
-    }
-    return undefined as T;
-  }
-  return response as T;
-}
-
-/**
- * Проверяет форму Electron IpcResponse envelope.
- *
- * @param value - Произвольное значение.
- * @returns `true`, если есть boolean `success`.
- */
-function isIpcEnvelope(
-  value: unknown
-): value is { success: boolean; data?: unknown; error?: string } {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    'success' in value &&
-    typeof (value as { success: unknown }).success === 'boolean'
-  );
 }

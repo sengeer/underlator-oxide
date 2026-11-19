@@ -15,6 +15,10 @@ import type {
   SplashCompleteCallback,
   SplashErrorCallback,
 } from '../types/splash-screen';
+import {
+  getLegacySplashApi,
+  type LegacySplashApi,
+} from '../types/splash-screen-ipc';
 
 /**
  * @class Класс для работы с Electron API splash screen.
@@ -30,12 +34,12 @@ export class SplashScreenApi {
   constructor(config?: Partial<SplashApiConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
 
-    // Проверяет доступность Electron API
-    if (typeof window !== 'undefined' && window.electron?.splash) {
-      this.setupEventListeners();
+    const legacySplash = getLegacySplashApi();
+    if (legacySplash) {
+      this.setupEventListeners(legacySplash);
     } else {
       console.warn(
-        'Electron API is unavailable, splash screen may not work correctly'
+        'Legacy splash API is unavailable, splash screen may not work correctly'
       );
     }
   }
@@ -48,11 +52,12 @@ export class SplashScreenApi {
    */
   async getStatus(): Promise<SplashStatusData | null> {
     try {
-      if (!window.electron?.splash) {
-        throw new Error('The Electron API is unavailable');
+      const legacySplash = getLegacySplashApi();
+      if (!legacySplash) {
+        throw new Error('The legacy splash API is unavailable');
       }
 
-      const status = await window.electron.splash.getStatus();
+      const status = await legacySplash.getStatus();
 
       return status;
     } catch (error) {
@@ -144,32 +149,24 @@ export class SplashScreenApi {
    * Настраивает слушатели событий от Electron IPC.
    * Подписывается на события splash screen от main процесса.
    */
-  private setupEventListeners(): void {
-    // Проверяем доступность Electron API
-    if (!window.electron?.splash) {
-      console.warn(
-        'Electron API is not available for configuring splash screen listeners'
-      );
-      return;
-    }
-
+  private setupEventListeners(legacySplash: LegacySplashApi): void {
     // Подписывается на обновления статуса
-    window.electron.splash.onStatusUpdate((status: SplashStatusData) => {
+    legacySplash.onStatusUpdate((status: SplashStatusData) => {
       this.statusCallbacks.forEach((callback) => callback(status));
     });
 
     // Подписывается на обновления прогресса
-    window.electron.splash.onProgressUpdate((progress: number) => {
+    legacySplash.onProgressUpdate((progress: number) => {
       this.progressCallbacks.forEach((callback) => callback(progress));
     });
 
     // Подписывается на завершение инициализации
-    window.electron.splash.onComplete(() => {
+    legacySplash.onComplete(() => {
       this.completeCallbacks.forEach((callback) => callback());
     });
 
     // Подписывается на ошибки
-    window.electron.splash.onError((error: string) => {
+    legacySplash.onError((error: string) => {
       this.errorCallbacks.forEach((callback) => callback(error));
     });
   }

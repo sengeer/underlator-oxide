@@ -1,7 +1,7 @@
 # desktop-tauri-build Specification
 
 ## Purpose
-Задаёт воспроизводимую сборку и запуск Tauri desktop Underlator с каноническими релизовыми артефактами (Linux AppImage, macOS arm64 DMG, Windows portable zip), developer-документацией и жёстким приёмочным gate на Fedora Workstation 44 до выпила Electron.
+Задаёт воспроизводимую сборку и запуск Tauri desktop Underlator с каноническими релизовыми артефактами (Linux AppImage, macOS arm64 DMG, Windows portable zip) и developer-документацией для двух официальных режимов. Сохраняет закрытый приёмочный gate на Fedora Workstation 44 как историческое доказательство готовности desktop-поставки.
 
 ## Requirements
 
@@ -47,22 +47,19 @@
 - **AND** типичные ошибки отсутствующих deps MUST быть описаны кратко
 
 ### Requirement: Desktop modes and environment documentation
-SHALL существовать короткий документ (например `docs/DESKTOP_TAURI.md` и/или раздел README), который описывает:
-
-- Desktop (Tauri) vs Docker (server) vs (временно) Electron
-- переменные окружения `OLLAMA_BASE_URL` и каталог данных (app data dir / `UNDERLATOR_DATA_DIR`)
-- как собрать/переименовать каждый канонический артефакт
-- матрицу `verified` / `unverified` по ОС (Linux Fedora 44, macOS arm64, Windows 11)
+Проект SHALL поддерживать документ `docs/DESKTOP_TAURI.md` и связанный README-раздел, описывающие только два официальных режима: desktop Tauri и docker server. Документация MUST содержать `OLLAMA_BASE_URL`, data dir/override, команды артефактов и неизменную фактическую матрицу `verified` / `unverified`; legacy desktop MUST NOT представляться активным или временно поддерживаемым путём.
 
 #### Scenario: Modes and env are documented
 - **WHEN** клонировавший репозиторий открывает desktop doc
-- **THEN** MUST быть ясно, какой host использовать для desktop / docker / Electron
-- **AND** MUST быть указаны `OLLAMA_BASE_URL` и data dir override для desktop
+- **THEN** MUST быть однозначно указано, что desktop использует Tauri, а web/docker — server
+- **AND** MUST быть указаны `OLLAMA_BASE_URL`, desktop app data dir, `UNDERLATOR_DATA_DIR` и docker `/data`
+- **AND** MUST NOT быть инструкции запуска или сборки legacy desktop host
 
 #### Scenario: Verification matrix distinguishes verified and unverified
-- **WHEN** DoD атома 5.2 фиксируется
-- **THEN** матрица MUST пометить Fedora 44 AppImage как обязательный `verified` (после успешного smoke)
-- **AND** macOS / Windows MUST быть `verified` только при фактическом smoke на машине, иначе `unverified` с пошаговой инструкцией
+- **WHEN** документация обновляется для удаления legacy host
+- **THEN** Fedora 44 AppImage MUST остаться `verified` с прежним доказательством живого smoke
+- **AND** macOS / Windows MUST сохранить фактические статусы `unverified`, пока не выполнен отдельный smoke
+- **AND** обновление формулировок режимов MUST NOT переписывать строки матрицы или её выводы
 
 ### Requirement: Fedora Workstation 44 AppImage acceptance gate
 Атом 5.2 SHALL считаться принятым только после жёсткого gate на **Fedora Workstation 44** (без N/A):
@@ -84,13 +81,24 @@ SHALL существовать короткий документ (наприме
 - **THEN** соответствующая строка матрицы MUST быть `unverified` с пошаговой инструкцией сборки
 - **AND** Linux AppImage gate на Fedora 44 MUST всё равно быть выполнен для приёмки атома
 
-### Requirement: Gate before Electron removal (atom 6.1)
-Выпил Electron / `ElectronTransport` / `electron-app` (атом 6.1) MUST NOT начинаться, пока атом 5.2 не закрыт: рабочий канонический AppImage на Fedora Workstation 44 + docs/инструкции для macOS arm64 DMG и Windows portable zip. Атом 5.2 MUST NOT сам удалять Electron.
+### Requirement: Verified Fedora gate precedes legacy host removal
+Атом 7.1 SHALL опираться на уже закрытый gate 5.2: канонический AppImage запущен на Fedora Workstation 44, живой MVP smoke против Ollama пройден, macOS/Windows задокументированы. Перед удалением MUST быть проверено наличие этих доказательств; повторное требование сохранять legacy host после закрытия gate больше не действует.
 
 #### Scenario: Electron remains until 5.2 closed
-- **WHEN** выполняется DoD атома 5.2
-- **THEN** `electron-app/` и `ElectronTransport` MUST оставаться в репозитории
-- **AND** документация MUST явно указывать, что 6.1 запрещён до закрытия Fedora AppImage gate и docs для остальных артефактов
+- **WHEN** оценивается порядок исторического gate и последующего атома 7.1
+- **THEN** до закрытия 5.2 legacy host MUST сохраняться, а удаление MUST начинаться только после подтверждённого Fedora AppImage smoke
+- **AND** после статуса `verified` новое требование продолжать сохранять legacy host MUST NOT применяться
+
+#### Scenario: Closed Fedora gate authorizes cleanup
+- **WHEN** начинается удаление legacy desktop host
+- **THEN** матрица desktop docs MUST показывать Fedora 44 AppImage `verified`, а `acceptance-smoke.json` с `all_ok` MUST оставаться описанным доказательством
+- **AND** инструкции macOS arm64 DMG и Windows portable zip MUST оставаться доступными
+- **AND** unit/mock или повторный `tauri dev` MUST NOT подменять это ранее полученное AppImage-доказательство
+
+#### Scenario: Gate history does not imply a supported third host
+- **WHEN** читатель просматривает обновлённую desktop-документацию после 7.1
+- **THEN** закрытый gate MAY быть описан как историческое основание удаления
+- **AND** документация MUST NOT содержать отложенное будущее удаление или предлагать legacy host как текущий production/development режим
 
 ### Requirement: Out of scope surfaces stay untouched
 Атом 5.2 MUST NOT: менять бизнес-логику или DTO `underlator-core`; добавлять RAG / splash / embedded Ollama runtime; править `underlator-server` / docker вне крайней дыры контракта; широко рефакторить React/FSD вне нужного для desktop build/run; требовать обязательный CI matrix / release upload артефактов.

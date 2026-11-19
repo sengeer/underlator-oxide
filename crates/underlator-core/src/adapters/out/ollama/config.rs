@@ -14,7 +14,7 @@ pub(crate) const ID_ANTHROPIC: &str = "anthropic";
 /// Данные для создания провайдера: DTO `id`/`url` и флаг облачного opt-in.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ProviderFactoryConfig {
-    /// Конфиг провайдера, совместимый с `ElectronApiConfig`.
+    /// Конфиг провайдера с идентификатором и base URL.
     pub provider: ProviderConfig,
     /// Явный opt-in на облачные stubs (`openrouter`, `anthropic`). По умолчанию выключен.
     pub allow_cloud: bool,

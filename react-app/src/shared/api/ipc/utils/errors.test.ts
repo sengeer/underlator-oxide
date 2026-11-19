@@ -16,7 +16,7 @@ describe('BackendError', () => {
     expect(error.message).toBe('chat missing');
   });
 
-  it('Electron без класса мапится в internal', () => {
+  it('тело без класса мапится в internal', () => {
     const error = backendErrorFromBody({ message: 'IPC failed' }, 'IPC failed');
     expect(error.class).toBe('internal');
     expect(error.message).toBe('IPC failed');

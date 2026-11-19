@@ -1,6 +1,6 @@
 //! Ядро Underlator: общая логика dual-mode backend.
 //!
-//! Crate **не** зависит от `tauri`, `axum` и Electron. Host-слои
+//! Crate **не** зависит от `tauri`, `axum` и frontend. Host-слои
 //! (`underlator-server`, `underlator-tauri`) — driving adapters: разбор входа
 //! → вызов application/ports API → сериализация/emit.
 //!

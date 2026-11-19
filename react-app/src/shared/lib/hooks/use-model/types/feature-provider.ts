@@ -6,7 +6,7 @@
 import { Dispatch } from 'redux';
 
 /**
- * Ответ от LLM модели через Electron IPC.
+ * Ответ от LLM модели через BackendClient.
  * Структура данных, получаемых от IPC.
  */
 export interface IpcResponse {

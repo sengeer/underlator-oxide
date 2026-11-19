@@ -60,9 +60,15 @@ The Rust workspace SHALL compile successfully via `cargo check --workspace` afte
 - **WHEN** a developer runs `cargo check --workspace` from the repository root
 - **THEN** the command exits successfully for all workspace members
 
-### Requirement: Existing Electron and React apps remain intact
-Applying this change MUST NOT remove or break the existing `electron-app` and `react-app` project trees as a required part of the scaffold.
+### Requirement: Supported application trees match dual-mode delivery
+Репозиторий SHALL сохранять `react-app` и Rust workspace из core/server/Tauri как единственные поддерживаемые application trees для dual-mode MVP. Каталог legacy desktop host MUST NOT требоваться для build, test, run или docker; его прежние версии MAY быть восстановлены только из git-истории или согласованного tag/архива.
 
 #### Scenario: Legacy apps still present
-- **WHEN** the scaffold change is complete
-- **THEN** `electron-app/` and `react-app/` directories still exist and are not deleted by this change
+- **WHEN** проверяется прежний инвариант сохранности application trees после завершения 7.1
+- **THEN** `react-app/`, `crates/underlator-core/`, `crates/underlator-server/` и `crates/underlator-tauri/` MUST оставаться рабочими
+- **AND** прежнее требование присутствия `electron-app/` MUST быть снято, а официальные пути запуска MUST ограничиваться desktop Tauri и docker server
+
+#### Scenario: Legacy tree is not a build prerequisite
+- **WHEN** разработчик собирает React, Rust workspace или docker image из актуального дерева
+- **THEN** наличие каталога `electron-app/` MUST NOT требоваться
+- **AND** активные scripts, ignore rules и документация MUST NOT направлять разработчика в legacy host

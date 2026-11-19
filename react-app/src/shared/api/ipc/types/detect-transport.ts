@@ -4,12 +4,10 @@
  */
 
 /** Режим транспорта BackendClient. */
-export type BackendMode = 'http' | 'electron' | 'tauri';
+export type BackendMode = 'http' | 'tauri';
 
 /** Глобали для detect без обязательного DOM. */
 export interface DetectTransportGlobals {
-  /** Preload API Electron (`window.electron`). */
-  electron?: unknown;
   /** Tauri 1.x global. */
   __TAURI__?: unknown;
   /** Tauri 2 internals. */

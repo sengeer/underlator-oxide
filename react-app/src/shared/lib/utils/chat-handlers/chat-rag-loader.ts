@@ -6,6 +6,7 @@
 
 // TODO(rag): restore ragIpc / helpers when rust-core RAG lands
 // import { ragIpc } from '../../../apis/rag-ipc/';
+// import type { LegacyChatRagWindow } from './types/legacy-rag-ipc';
 import type { ModelRequestContext } from '../../hooks/use-model/types/feature-provider';
 // import callANotificationWithALog from '../../utils/call-a-notification-with-a-log';
 import type { RAGContextResult } from './types/chat-handlers';
@@ -30,8 +31,7 @@ export async function loadRagContext(
   /*
   try {
     // Web / server-режим: RAG IPC нет — не блокируем чат и не спамим toast.
-    const electronApi = (window as Window & { electron?: { rag?: unknown } })
-      .electron;
+    const electronApi = (window as LegacyChatRagWindow).electron;
     if (typeof window === 'undefined' || !electronApi?.rag) {
       return {
         success: true,

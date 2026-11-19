@@ -58,7 +58,7 @@ export interface GenerateProgress {
   eval_count?: number;
   /** Контекст продолжения. */
   context?: number[];
-  /** Ошибка chunk (Electron legacy). */
+  /** Ошибка chunk, если host передал её в progress payload. */
   error?: string;
   /** Дополнительные поля chunk. */
   [key: string]: unknown;

@@ -14,9 +14,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 describe('shared/api/ipc public index', () => {
   it('экспортирует getBackendClient, типы и BackendError без transports/', () => {
     expect(typeof api.getBackendClient).toBe('function');
+    expect(typeof api.detectTransport).toBe('function');
     expect(api.BackendError).toBeDefined();
     expect('HttpTransport' in api).toBe(false);
-    expect('ElectronTransport' in api).toBe(false);
     expect('TauriTransport' in api).toBe(false);
 
     const source = readFileSync(join(here, 'index.ts'), 'utf8');

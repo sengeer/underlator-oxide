@@ -5,7 +5,7 @@ use std::time::Duration;
 
 /// Политика повторных попыток unary-запросов.
 ///
-/// Значения по умолчанию совпадают с Electron `withRetry`: 3 попытки,
+/// Значения по умолчанию зафиксированы MVP-контрактом: 3 попытки,
 /// базовая задержка 1 с, множитель 2, потолок 10 с.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RetryPolicy {
@@ -157,7 +157,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn retry_policy_defaults_match_electron() {
+    fn retry_policy_defaults_match_contract() {
         let policy = RetryPolicy::default();
         assert_eq!(policy.max_attempts, 3);
         assert_eq!(policy.base_delay, Duration::from_secs(1));

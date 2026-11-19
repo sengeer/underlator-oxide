@@ -489,7 +489,7 @@ export const fetchInstalledModels = createAsyncThunk(
  * Redux slice для управления моделями.
  * Содержит reducers и actions для всех операций с моделями.
  */
-const electronSlice = createSlice({
+const manageModelsSlice = createSlice({
   name: 'manageModels',
   initialState,
   reducers: {
@@ -774,10 +774,10 @@ export const {
   clearModelError,
   resetSearch,
   resetState,
-} = electronSlice.actions;
+} = manageModelsSlice.actions;
 
 // Экспорт reducer
-export default electronSlice.reducer;
+export default manageModelsSlice.reducer;
 
 // Селекторы для упрощения доступа к состоянию
 export const selectManageModelsState = (state: {

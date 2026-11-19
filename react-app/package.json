@@ -19,7 +19,6 @@
     "url": "https://boosty.to/underlator/donate"
   },
   "keywords": [
-    "electron",
     "react",
     "translation",
     "pdf",
@@ -70,7 +69,6 @@
     "prettier": "prettier --write .",
     "lint-staged": "lint-staged",
     "prepare": "cd ../ && husky ./react-app/.husky",
-    "react:build": "npm run build && node ./scripts/move-build-to-electron.js",
     "lingui:extract": "lingui extract",
     "lingui:compile": "lingui compile --typescript",
     "docs": "npx typedoc",

@@ -14,7 +14,7 @@ use crate::domain::chat::dto::{
 use crate::domain::error::CoreError;
 use crate::ports::{ChatStore, StorageRoot};
 
-/// Версия ондиск-формата, совместимая с Electron `CHAT_VERSION`.
+/// Версия ондиск-формата канонического хранилища чатов.
 const CHAT_FILE_VERSION: &str = "0.1.0";
 
 /// Файловое хранилище чатов под [`StorageRoot`].

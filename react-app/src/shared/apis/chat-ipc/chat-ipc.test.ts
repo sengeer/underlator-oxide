@@ -31,7 +31,7 @@ describe('chat-ipc facade', () => {
     createMock.mockReset();
   });
 
-  it('не содержит window.electron.chat и ловит BackendError как success: false', async () => {
+  it('использует BackendClient и ловит BackendError как success: false', async () => {
     const source = await import('node:fs').then((fs) =>
       fs.readFileSync(new URL('./chat-ipc.ts', import.meta.url), 'utf8')
     );

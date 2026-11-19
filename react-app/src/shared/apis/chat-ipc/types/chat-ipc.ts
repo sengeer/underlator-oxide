@@ -22,7 +22,7 @@ export type ChatOperationStatus =
 /**
  * Интерфейс сообщения чата.
  * Определяет структуру сообщения в чате с поддержкой различных ролей.
- * Синхронизирован с Electron типами для обеспечения совместимости.
+ * Синхронизирован с DTO ядра для обеспечения совместимости.
  */
 export interface ChatMessage {
   /** Уникальный идентификатор сообщения */
@@ -56,7 +56,7 @@ export interface ChatMessage {
 /**
  * Интерфейс данных чата.
  * Содержит полную информацию о чате включая все сообщения.
- * Синхронизирован с Electron типами для обеспечения совместимости.
+ * Синхронизирован с DTO ядра для обеспечения совместимости.
  */
 export interface ChatData {
   /** Уникальный идентификатор чата */
@@ -101,7 +101,7 @@ export interface ChatData {
 /**
  * Интерфейс файла чата.
  * Содержит метаданные для отображения в списке чатов без загрузки полного содержимого.
- * Синхронизирован с Electron типами для обеспечения совместимости.
+ * Синхронизирован с DTO ядра для обеспечения совместимости.
  */
 export interface ChatFile {
   /** Уникальный идентификатор чата */
@@ -143,7 +143,7 @@ export interface ChatFile {
 /**
  * Параметры для создания нового чата.
  * Информация необходимая для создания чата.
- * Синхронизированы с CreateChatRequest из Electron типов.
+ * Синхронизированы с CreateChatRequest из DTO ядра.
  */
 export interface CreateChatParams {
   /** Заголовок чата */
@@ -175,7 +175,7 @@ export interface CreateChatParams {
 /**
  * Параметры для получения списка чатов.
  * Поддерживает пагинацию и сортировку.
- * Синхронизированы с ListChatsRequest из Electron типов.
+ * Синхронизированы с ListChatsRequest из DTO ядра.
  */
 export interface ListChatsParams {
   /** Максимальное количество чатов для загрузки */
@@ -203,7 +203,7 @@ export interface ListChatsParams {
 /**
  * Параметры для получения конкретного чата.
  * Информация для загрузки полного содержимого чата.
- * Синхронизированы с GetChatRequest из Electron типов.
+ * Синхронизированы с GetChatRequest из DTO ядра.
  */
 export interface GetChatParams {
   /** ID чата для получения */
@@ -219,7 +219,7 @@ export interface GetChatParams {
 /**
  * Параметры для обновления чата.
  * Информация для обновления существующего чата.
- * Синхронизированы с UpdateChatRequest из Electron типов.
+ * Синхронизированы с UpdateChatRequest из DTO ядра.
  */
 export interface UpdateChatParams {
   /** ID чата для обновления */
@@ -253,7 +253,7 @@ export interface UpdateChatParams {
 /**
  * Параметры для добавления сообщения в чат.
  * Информация для добавления нового сообщения.
- * Синхронизированы с AddMessageRequest из Electron типов.
+ * Синхронизированы с AddMessageRequest из DTO ядра.
  */
 export interface AddMessageParams {
   /** ID чата */
@@ -285,7 +285,7 @@ export interface AddMessageParams {
 /**
  * Параметры для удаления чата.
  * Информация для удаления чата с возможностью создания резервной копии.
- * Синхронизированы с DeleteChatRequest из Electron типов.
+ * Синхронизированы с DeleteChatRequest из DTO ядра.
  */
 export interface DeleteChatParams {
   /** ID чата для удаления */
@@ -299,7 +299,7 @@ export interface DeleteChatParams {
 /**
  * Результат операции с чатами.
  * Стандартизированный ответ для всех операций с чатами.
- * Синхронизирован с ChatOperationResult из Electron типов.
+ * Синхронизирован с ChatOperationResult из DTO ядра.
  */
 export interface ChatOperationResult<T = unknown> {
   /** Успешность операции */
@@ -317,7 +317,7 @@ export interface ChatOperationResult<T = unknown> {
 /**
  * Результат создания чата.
  * Содержит информацию о созданном чате.
- * Синхронизирован с CreateChatResult из Electron типов.
+ * Синхронизирован с CreateChatResult из DTO ядра.
  */
 export interface CreateChatResult extends ChatOperationResult<ChatData> {
   /** Созданный чат */
@@ -327,7 +327,7 @@ export interface CreateChatResult extends ChatOperationResult<ChatData> {
 /**
  * Результат получения списка чатов.
  * Содержит список чатов с метаданными.
- * Синхронизирован с ListChatsResult из Electron типов.
+ * Синхронизирован с ListChatsResult из DTO ядра.
  */
 export interface ListChatsResult
   extends ChatOperationResult<{
@@ -374,7 +374,7 @@ export interface ListChatsResult
 /**
  * Результат получения чата.
  * Содержит полную информацию о чате.
- * Синхронизирован с GetChatResult из Electron типов.
+ * Синхронизирован с GetChatResult из DTO ядра.
  */
 export interface GetChatResult extends ChatOperationResult<ChatData> {
   /** Полученный чат */
@@ -384,7 +384,7 @@ export interface GetChatResult extends ChatOperationResult<ChatData> {
 /**
  * Результат обновления чата.
  * Содержит информацию об обновленном чате.
- * Синхронизирован с UpdateChatResult из Electron типов.
+ * Синхронизирован с UpdateChatResult из DTO ядра.
  */
 export interface UpdateChatResult extends ChatOperationResult<ChatData> {
   /** Обновленный чат */
@@ -394,7 +394,7 @@ export interface UpdateChatResult extends ChatOperationResult<ChatData> {
 /**
  * Результат добавления сообщения.
  * Содержит информацию о добавленном сообщении.
- * Синхронизирован с AddMessageResult из Electron типов.
+ * Синхронизирован с AddMessageResult из DTO ядра.
  */
 export interface AddMessageResult
   extends ChatOperationResult<{
@@ -415,7 +415,7 @@ export interface AddMessageResult
 /**
  * Результат удаления чата.
  * Содержит информацию об удаленном чате.
- * Синхронизирован с DeleteChatResult из Electron типов.
+ * Синхронизирован с DeleteChatResult из DTO ядра.
  */
 export interface DeleteChatResult extends ChatOperationResult<void> {
   /** ID удаленного чата */
@@ -424,7 +424,7 @@ export interface DeleteChatResult extends ChatOperationResult<void> {
 
 /**
  * Конфигурация для API клиента.
- * Настройки для работы с Chat Electron API.
+ * Настройки существующей Chat API-обёртки над BackendClient.
  */
 export interface ChatApiConfig {
   /** Таймаут для операций в миллисекундах */

@@ -5,7 +5,7 @@
 
 import { BackendError, getBackendClient } from '../../../shared/api/ipc';
 import type { InstallProgress } from '../../../shared/api/ipc';
-import { DEFAULT_CONFIG } from '../constants/electron';
+import { DEFAULT_CONFIG } from '../constants/provider';
 import type {
   GetCatalogParams,
   ModelSearchFilters,
@@ -47,7 +47,7 @@ function toInstallProgress(progress: InstallProgress): ModelInstallProgress {
 
 /**
  * @class ModelAndCatalogIpc
- * Обёртка catalog/model для settings. Envelope для Redux, без window.electron.
+ * Обёртка catalog/model для settings. Envelope для Redux поверх BackendClient.
  */
 class ModelAndCatalogIpc {
   private config: SettingsApiConfig;

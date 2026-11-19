@@ -102,7 +102,7 @@ function ChatSidebar({
             );
           }
         } catch {
-          // web / нет window.electron.rag — продолжаем удаление чата
+          // web / нет legacy RAG API — продолжаем удаление чата
         }
         */
 

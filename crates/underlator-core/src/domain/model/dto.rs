@@ -1,14 +1,14 @@
-//! DTO поверхности `model`, зеркало Electron preload и типов Ollama.
+//! DTO поверхности `model`, определённые каноническим MVP-контрактом и типами Ollama.
 
 use serde::{Deserialize, Serialize};
 
-/// Идентификатор локального Ollama по умолчанию (`ElectronApiConfig.id`).
+/// Идентификатор локального Ollama по умолчанию для конфигурации провайдера.
 pub const DEFAULT_PROVIDER_ID: &str = "ollama";
 
 /// URL локального Ollama по умолчанию (`http://127.0.0.1:11434`).
 pub const DEFAULT_PROVIDER_URL: &str = "http://127.0.0.1:11434";
 
-/// Конфигурация провайдера для вызова generate (`ElectronApiConfig`).
+/// Конфигурация провайдера с идентификатором и base URL.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProviderConfig {
     /// Идентификатор провайдера.

@@ -33,7 +33,7 @@ import type {
 import type { ChatMessage } from './types/use-model';
 
 /**
- * Обрабатывает контекстный перевод через Electron IPC.
+ * Обрабатывает контекстный перевод через BackendClient.
  * Использует translation handlers для соблюдения SRP.
  *
  * @param props - Контекст запроса. Подробнее см. в типе ModelRequestContext.
@@ -126,7 +126,7 @@ async function handleContextualTranslation(
 }
 
 /**
- * Обрабатывает инструкции через Electron IPC.
+ * Обрабатывает инструкции через BackendClient.
  * Использует translation handlers для соблюдения SRP.
  *
  * @param props - Контекст запроса. Подробнее см. ModelRequestContext.
@@ -168,7 +168,7 @@ async function handleInstruction(props: ModelRequestContext): Promise<void> {
 }
 
 /**
- * Обрабатывает простой перевод через Electron IPC.
+ * Обрабатывает простой перевод через BackendClient.
  * Использует translation handlers для соблюдения SRP.
  *
  * @param props - Контекст запроса к модели. Подробнее см. ModelRequestContext.
@@ -212,7 +212,7 @@ async function handleSimpleTranslation(
 }
 
 /**
- * Обрабатывает чат через Electron IPC с поддержкой контекста и суммирования.
+ * Обрабатывает чат через BackendClient с поддержкой контекста и суммирования.
  * Загружает историю сообщений, строит контекстный промпт и сохраняет ответ в чат.
  *
  * @param props - Контекст запроса. Подробнее см. ModelRequestContext.
@@ -393,22 +393,22 @@ async function handleChat(props: ModelRequestContext): Promise<void> {
  */
 export const featureProvider = {
   /**
-   * Обрабатывает чат через Electron IPC.
+   * Обрабатывает чат через BackendClient.
    */
   chat: handleChat,
 
   /**
-   * Обрабатывает контекстный перевод через Electron IPC.
+   * Обрабатывает контекстный перевод через BackendClient.
    */
   contextualTranslate: handleContextualTranslation,
 
   /**
-   * Обрабатывает инструкции через Electron IPC.
+   * Обрабатывает инструкции через BackendClient.
    */
   instruct: handleInstruction,
 
   /**
-   * Обрабатывает простой перевод через Electron IPC.
+   * Обрабатывает простой перевод через BackendClient.
    */
   translate: handleSimpleTranslation,
 };

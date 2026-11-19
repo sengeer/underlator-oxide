@@ -3,7 +3,7 @@
 use super::dto::{CatalogModelType, CompatibilityStatus, OllamaModelInfo};
 use crate::domain::iso8601::{millis_to_iso8601, unix_millis_now};
 
-/// Статический запасной список (как Electron `STATIC_MODELS`, минимум `qwen3`).
+/// Возвращает статический запасной список моделей библиотеки.
 pub fn static_library_models() -> Vec<OllamaModelInfo> {
     let now = millis_to_iso8601(unix_millis_now());
     let models = vec![OllamaModelInfo {

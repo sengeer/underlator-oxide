@@ -7,7 +7,7 @@ import type { ChatApiConfig } from '../types/chat-ipc';
 
 /**
  * Конфигурация по умолчанию для API клиента.
- * Базовые настройки для работы с Chat Electron API.
+ * Базовые настройки существующей Chat API-обёртки над BackendClient.
  */
 export const DEFAULT_CONFIG: ChatApiConfig = {
   timeout: 30000,

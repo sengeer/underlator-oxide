@@ -16,7 +16,7 @@ opencode.json
 .opencode
 .docs
 
-# Frontend / Electron build outputs
+# Frontend build outputs
 dist/
 
 # typedoc (generated API docs) — keep developer desktop doc tracked

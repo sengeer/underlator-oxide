@@ -6,6 +6,7 @@
  */
 
 import log from '../../lib/utils/log';
+import type { LegacyRagApi, LegacyRagWindow } from './types/legacy-rag-ipc';
 import type {
   RagApiConfig,
   ProcessDocumentRequest,
@@ -20,6 +21,23 @@ import type {
   CollectionStats,
   UploadAndProcessDocumentConfig,
 } from './types/rag-ipc';
+
+/**
+ * Возвращает локально типизированный RAG bridge только внутри conserved модуля.
+ *
+ * @returns Legacy RAG API.
+ * @throws Error, если legacy bridge недоступен.
+ */
+function requireLegacyRagApi(): LegacyRagApi {
+  const bridge =
+    typeof window === 'undefined'
+      ? undefined
+      : (window as LegacyRagWindow).electron?.rag;
+  if (!bridge) {
+    throw new Error('Legacy RAG API is unavailable');
+  }
+  return bridge;
+}
 
 /**
  * @class RagIpc
@@ -50,7 +68,7 @@ class RagIpc {
     log('Параметры processDocument:', params);
 
     try {
-      const response = await (window as any).electron.rag.processDocument({
+      const response = await requireLegacyRagApi().processDocument({
         filePath: params.filePath,
         chatId: params.chatId,
       });
@@ -82,7 +100,7 @@ class RagIpc {
     log('Параметры queryDocuments:', params);
 
     try {
-      const response = await (window as any).electron.rag.queryDocuments(
+      const response = await requireLegacyRagApi().queryDocuments(
         {
           query: params.query,
           chatId: params.chatId,
@@ -114,9 +132,7 @@ class RagIpc {
     params: DeleteCollectionRequest
   ): Promise<DeleteCollectionResult> {
     try {
-      const response = await (
-        window as any
-      ).electron.rag.deleteDocumentCollection({
+      const response = await requireLegacyRagApi().deleteDocumentCollection({
         chatId: params.chatId,
       });
 
@@ -144,9 +160,7 @@ class RagIpc {
     log('ID getCollectionStats:', chatId);
 
     try {
-      const response = await (window as any).electron.rag.getCollectionStats(
-        chatId
-      );
+      const response = await requireLegacyRagApi().getCollectionStats(chatId);
       log('Результат getCollectionStats:', response);
 
       // Извлекает data из обертки IPC
@@ -168,7 +182,7 @@ class RagIpc {
    */
   async listCollections(): Promise<VectorCollection[]> {
     try {
-      const response = await (window as any).electron.rag.listCollections();
+      const response = await requireLegacyRagApi().listCollections();
       log('Результат listCollections:', response);
 
       // Проверяет что response это IPC обертка
@@ -200,7 +214,7 @@ class RagIpc {
     callback: (progress: RagProcessingProgress) => void
   ): () => void {
     try {
-      return (window as any).electron.rag.onProcessingProgress(callback);
+      return requireLegacyRagApi().onProcessingProgress(callback);
     } catch (error) {
       this.handleError('onProcessingProgress', error);
       throw error;
@@ -245,9 +259,10 @@ class RagIpc {
         fileType: file.type,
         chatId,
       };
-      const response = await (
-        window as any
-      ).electron.rag.uploadAndProcessDocument(request, config);
+      const response = await requireLegacyRagApi().uploadAndProcessDocument(
+        request,
+        config
+      );
 
       log('Результат uploadAndProcessDocument', response);
 

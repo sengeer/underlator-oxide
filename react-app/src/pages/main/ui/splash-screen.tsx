@@ -25,6 +25,7 @@ import type {
   SplashScreenProps,
   SplashStatusData,
 } from '../types/splash-screen';
+import { getLegacySplashApi } from '../types/splash-screen-ipc';
 import '../styles/splash-screen.scss';
 
 /**
@@ -102,7 +103,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ className = '' }) => {
     dispatch(hide());
     return;
 
-    if (typeof window === 'undefined' || !window.electron?.splash) {
+    if (!getLegacySplashApi()) {
       dispatch(complete());
       dispatch(hide());
       return;

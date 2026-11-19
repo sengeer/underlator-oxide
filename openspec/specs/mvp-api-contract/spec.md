@@ -1,103 +1,100 @@
 # mvp-api-contract Specification
 
 ## Purpose
-Фиксирует в `underlator-core` типизированный MVP-контракт `model` / `catalog` / `chat` (запросы, ответы и progress-события) как общее зеркало текущего Electron preload, чтобы оба будущих host и React `BackendClient` использовали одни payload'ы и одну карту имён.
+Фиксирует самодостаточный MVP-контракт `model` / `catalog` / `chat` в OpenSpec и DTO `underlator-core/src/domain/`: запросы, ответы, progress-события и каноническую карту имён. Desktop/server hosts и React `BackendClient` используют одни payload'ы без внешнего legacy source.
 
 ## Requirements
 
-### Requirement: Model contract types mirror preload
-The core library SHALL expose serializable request and response types whose meaning matches the Electron preload `model` surface: `generate` (request + provider config), `stop`, `install`, `remove`, and `list`.
+### Requirement: Model contract is self-contained
+Ядро SHALL публиковать serializable DTO канонической поверхности `model`: `generate`, `stop`, `install`, `remove`, `list`. Этот OpenSpec и DTO `underlator-core/src/domain/` MUST быть самодостаточным источником полей и их смысла; внешний legacy source для чтения контракта MUST NOT требоваться.
 
 #### Scenario: Generate request and unary result
-- **WHEN** a host serializes a generate call
-- **THEN** the payload MUST include required fields `model` and `prompt`, optional generation fields equivalent to the current Ollama generate request (`system`, `temperature`, `max_tokens`, `num_predict`, `think`, `context`), and the provider config fields `id` and `url`
-- **AND** the unary completion payload MUST be the concatenated generated text (string), equivalent to the current invoke result data
+- **WHEN** host сериализует generate call
+- **THEN** payload MUST включать обязательные `model` и `prompt`, опциональные `system`, `temperature`, `max_tokens`, `num_predict`, `think`, `context`, а также provider config `id` и `url`
+- **AND** unary completion MUST быть сконкатенированной строкой сгенерированного текста
 
 #### Scenario: Install, remove, list, and stop payloads
-- **WHEN** a host serializes install, remove, list, or stop
-- **THEN** install MUST use a request with required `name` and optional `tag`, `registry`, `insecure`, and optional provider config fields `id` and `url`
-- **AND** remove MUST use a request with required `name` and optional provider config fields `id` and `url`
-- **AND** list MUST accept a request that MAY include provider config fields `id` and `url` (empty/omitted fields mean host process default) and MUST return a response with a `models` array whose items include `name`, `size`, and `modified_at`
-- **AND** stop MUST have an empty request body
-- **AND** install and remove unary results MUST include a boolean `success` field
+- **WHEN** host сериализует install, remove, list или stop
+- **THEN** install MUST использовать обязательное `name` и опциональные `tag`, `registry`, `insecure`, `id`, `url`
+- **AND** remove MUST использовать обязательное `name` и опциональные `id`, `url`
+- **AND** list MAY принимать `id` и `url`, а ответ MUST содержать `models` с `name`, `size`, `modified_at`
+- **AND** stop MUST иметь пустое тело запроса
+- **AND** install/remove unary results MUST содержать boolean `success`
 
 #### Scenario: Manage-models requests carry UI base URL
-- **WHEN** frontend manage models sends list, install, or remove against a user-configured Ollama base URL
-- **THEN** the serialized request MUST be able to include that `url` (and provider `id`) so hosts are not limited to process env as the only source of truth
-- **AND** JSON keys for provider config MUST remain `id` and `url` (no rename required on React)
+- **WHEN** frontend manage models отправляет list/install/remove на настроенный Ollama base URL
+- **THEN** serialized request MUST поддерживать этот `url` и provider `id`
+- **AND** JSON-ключи provider config MUST оставаться `id` и `url`
 
-### Requirement: Catalog contract types mirror preload
-The core library SHALL expose serializable types whose meaning matches the Electron preload `catalog` surface: `get`, `search`, and `getModelInfo`.
+### Requirement: Catalog contract is self-contained
+Ядро SHALL публиковать serializable DTO канонической поверхности `catalog`: `get`, `search`, `getModelInfo`. Поля фильтров, snapshot и model card MUST полностью определяться этим контрактом и DTO ядра без обращения к внешнему legacy source.
 
 #### Scenario: Get and search return a catalog snapshot
-- **WHEN** a host serializes `catalog.get` or `catalog.search`
-- **THEN** `get` MUST accept optional `forceRefresh`
-- **AND** `search` MUST accept the current catalog filter fields (including `search`, `type`, `localStatus`, size bounds, `category`, `tags`, `languages`, `architecture`, `format`, `license`, `author`, `minRating`, `minDownloads`, `recommendedOnly`, `availableOnly`, `sortBy`, `sortOrder`, `limit`, `offset`)
-- **AND** both operations MUST share a catalog snapshot payload with `ollama` (array of model cards), `totalCount`, and `lastUpdated`
+- **WHEN** host сериализует `catalog.get` или `catalog.search`
+- **THEN** `get` MUST принимать optional `forceRefresh`
+- **AND** `search` MUST принимать поля `search`, `type`, `localStatus`, size bounds, `category`, `tags`, `languages`, `architecture`, `format`, `license`, `author`, `minRating`, `minDownloads`, `recommendedOnly`, `availableOnly`, `sortBy`, `sortOrder`, `limit`, `offset`
+- **AND** обе операции MUST использовать snapshot с `ollama`, `totalCount`, `lastUpdated`
 
 #### Scenario: Model card and getModelInfo
-- **WHEN** a host serializes `catalog.getModelInfo` or a catalog model card
-- **THEN** the lookup request MUST include `modelName`
-- **AND** the model card MUST carry the current fields (`id`, `name`, `displayName`, `size`, `createdAt`, `modifiedAt`, `type` equal to `ollama`, `format`, `parameterSize`, `quantizationLevel`, plus optional description/version/digest/tags/compatibility)
-- **AND** `getModelInfo` MUST allow a null result when the model is not found
+- **WHEN** host сериализует `catalog.getModelInfo` или catalog model card
+- **THEN** lookup request MUST содержать `modelName`
+- **AND** model card MUST содержать `id`, `name`, `displayName`, `size`, `createdAt`, `modifiedAt`, `type` = `ollama`, `format`, `parameterSize`, `quantizationLevel` и задокументированные optional description/version/digest/tags/compatibility
+- **AND** `getModelInfo` MUST допускать `null`, когда модель не найдена
 
-### Requirement: Chat contract types mirror preload
-The core library SHALL expose serializable types whose meaning matches the Electron preload `chat` surface: `create`, `get`, `update`, `delete`, `list`, and `addMessage`.
+### Requirement: Chat contract is self-contained
+Ядро SHALL публиковать serializable DTO канонической поверхности `chat`: `create`, `get`, `update`, `delete`, `list`, `addMessage`. Структура chat/message, фильтров и ответов MUST читаться только из этого контракта и DTO ядра.
 
 #### Scenario: Chat entity and message
-- **WHEN** a host serializes a chat or a message
-- **THEN** a chat MUST include `id`, `title`, `messages`, `createdAt`, `updatedAt`, and `defaultModel`
-- **AND** a message MUST include `id`, `role` (`user` | `assistant` | `system`), `content`, and `timestamp`
-- **AND** optional nested objects (`model`, `context`, `metadata`, generation settings) MUST preserve the current meaning
+- **WHEN** host сериализует chat или message
+- **THEN** chat MUST содержать `id`, `title`, `messages`, `createdAt`, `updatedAt`, `defaultModel`
+- **AND** message MUST содержать `id`, `role` (`user` | `assistant` | `system`), `content`, `timestamp`
+- **AND** optional nested `model`, `context`, `metadata`, generation settings MUST сохранять документированный смысл
 
 #### Scenario: Chat operation payloads
-- **WHEN** a host serializes chat CRUD and `addMessage`
-- **THEN** create MUST accept `title` and `defaultModel` (plus optional `systemPrompt`, `generationSettings`, `metadata`) and return a full chat
-- **AND** get MUST accept `chatId` with optional `includeMessages`, `messageLimit`, `messageOffset` and return a full chat
-- **AND** update MUST accept `chatId` with optional patch fields and return a full chat
-- **AND** delete MUST accept `chatId` with optional `createBackup` and `confirmed`, and return `deletedChatId`
-- **AND** list MUST accept the current list filters and return `chats` (list items without full message history), `totalCount`, and `pagination`
-- **AND** addMessage MUST accept `chatId`, `role`, and `content` (plus optional `model`, `context`, `metadata`) and return the new `message` together with `updatedChat`
+- **WHEN** host сериализует chat CRUD и `addMessage`
+- **THEN** create MUST принимать `title`, `defaultModel` и optional `systemPrompt`, `generationSettings`, `metadata`, возвращая полный chat
+- **AND** get MUST принимать `chatId` и optional `includeMessages`, `messageLimit`, `messageOffset`
+- **AND** update MUST принимать `chatId` и optional patch fields, delete MUST принимать `chatId` и optional `createBackup`, `confirmed`, возвращая `deletedChatId`
+- **AND** list MUST возвращать `chats`, `totalCount`, `pagination`, а addMessage MUST принимать `chatId`, `role`, `content` и возвращать `message` вместе с `updatedChat`
 
 ### Requirement: Unified progress event model
-The core library SHALL define a single event model for streaming progress that covers Electron events `model:generate-progress` and `model:install-progress`, without embedding host transport (IPC, WebSocket, SSE, or Tauri emit).
+Ядро SHALL определять host-neutral progress events `model:generate-progress` и `model:install-progress`. Строковые имена MUST остаться стабильными; контракт MUST NOT встраивать IPC, WebSocket, SSE или Tauri emit в payload.
 
 #### Scenario: Generate progress event
-- **WHEN** a generate stream emits a chunk
-- **THEN** the event identity MUST correspond to `model:generate-progress`
-- **AND** the payload MUST include `model`, `response`, `created_at`, and `done`, with optional duration/token/context fields equivalent to the current generate stream chunk
+- **WHEN** generate stream emits a chunk
+- **THEN** event identity MUST быть `model:generate-progress`
+- **AND** payload MUST содержать `model`, `response`, `created_at`, `done` и optional duration/token/context поля DTO
 
 #### Scenario: Install progress event
-- **WHEN** a model install emits progress
-- **THEN** the event identity MUST correspond to `model:install-progress`
-- **AND** the payload MUST include `status` (`downloading` | `verifying` | `writing` | `complete`), `name`, and optional `size`, `total`, `digest`, `error`
+- **WHEN** model install emits progress
+- **THEN** event identity MUST быть `model:install-progress`
+- **AND** payload MUST содержать `status` (`downloading` | `verifying` | `writing` | `complete`), `name` и optional `size`, `total`, `digest`, `error`
 
 ### Requirement: JSON field names stay compatible with existing TypeScript types
-Serialized JSON for MVP contract types MUST use the same field names as the current TypeScript sources under `electron-app/src/types/` (mixed camelCase and snake_case as already used). Changing field meaning is forbidden; this change MUST NOT require React to rename keys.
+Сериализация MVP DTO MUST сохранять имена полей, зафиксированные в этом OpenSpec и TypeScript-типах `react-app`, включая существующий смешанный camelCase / snake_case. Смена смысла или имён ключей MUST NOT быть частью удаления legacy host.
 
 #### Scenario: Roundtrip keeps TypeScript key names
-- **WHEN** a representative payload is serialized to JSON and deserialized back
-- **THEN** required keys such as `max_tokens`, `created_at`, `chatId`, `forceRefresh`, `displayName`, and `totalCount` MUST appear with those exact names
-- **AND** the deserialized value MUST equal the original for those fields
+- **WHEN** representative payload сериализуется в JSON и десериализуется обратно
+- **THEN** ключи `max_tokens`, `created_at`, `chatId`, `forceRefresh`, `displayName`, `totalCount` MUST сохраниться точно
+- **AND** deserialized value MUST равняться исходному для этих полей
 
 ### Requirement: Naming map from IPC to use-case to HTTP path
-The core library SHALL publish a naming map covering every MVP preload operation: Electron IPC name → core use-case identifier → future HTTP path (and a draft Tauri command name). The map MUST NOT invent new operations and MUST NOT include `rag.*` or `splash.*`.
+Ядро SHALL публиковать каноническую naming map для всех 14 MVP-операций: стабильный IPC identifier → use-case identifier → HTTP method/path → Tauri command. Map MUST быть самодостаточной, MUST NOT добавлять операции и MUST NOT включать `rag.*` или `splash.*`.
 
 #### Scenario: Complete MVP operation coverage
-- **WHEN** a developer inspects the naming map
-- **THEN** it MUST contain entries for `model:generate`, `model:stop`, `model:install`, `model:remove`, `model:list`, `catalog:get`, `catalog:search`, `catalog:get-model-info`, `chat:create`, `chat:get`, `chat:update`, `chat:delete`, `chat:list`, and `chat:add-message`
-- **AND** it MUST record event names `model:generate-progress` and `model:install-progress`
-- **AND** HTTP paths MUST live under `/api/model`, `/api/catalog`, and `/api/chat` as drafted in the dual-mode architectural plan
-- **AND** the map MUST be queryable in tests (each IPC name resolves to exactly one use-case identifier)
+- **WHEN** разработчик инспектирует naming map
+- **THEN** она MUST содержать `model:generate`, `model:stop`, `model:install`, `model:remove`, `model:list`, `catalog:get`, `catalog:search`, `catalog:get-model-info`, `chat:create`, `chat:get`, `chat:update`, `chat:delete`, `chat:list`, `chat:add-message`
+- **AND** она MUST содержать события `model:generate-progress`, `model:install-progress`
+- **AND** HTTP paths MUST находиться под `/api/model`, `/api/catalog`, `/api/chat`, а каждый IPC identifier MUST разрешаться ровно в один use-case identifier в тестах
 
 ### Requirement: Serialization works for both future hosts
-All MVP contract types and progress event payloads SHALL be JSON-serializable and JSON-deserializable so that both the desktop host and the server host can reuse the same types. The core library MUST NOT depend on `tauri` or `axum` to define or serialize this contract.
+Все MVP DTO и progress payloads SHALL быть JSON-serializable/deserializable для desktop и server hosts. Core MUST NOT зависеть от `tauri` или `axum`; host-specific envelope MUST NOT быть частью канонического core contract.
 
 #### Scenario: Host-agnostic JSON
-- **WHEN** `crates/underlator-core` is inspected and a contract payload is encoded as JSON
-- **THEN** core dependencies MUST NOT include `tauri` or `axum`
-- **AND** the JSON MUST be usable without a host-specific wrapper type inside core
-- **AND** the Electron `IpcResponse` envelope (`success` / `data` / `error` / `id`) MUST NOT be required as part of the core contract (hosts wrap or unwrap at the edge)
+- **WHEN** `crates/underlator-core` инспектируется и contract payload кодируется в JSON
+- **THEN** core dependencies MUST NOT включать `tauri` или `axum`
+- **AND** JSON MUST быть пригоден без host-specific wrapper внутри core
+- **AND** envelope вида `success` / `data` / `error` / `id` MUST NOT требоваться как часть core contract
 
 ### Requirement: RAG and splash stay outside the MVP contract
 The MVP contract MUST NOT include RAG or splash DTO. Placeholder modules MAY exist, but they MUST NOT export request/response types for those surfaces in this change.
@@ -107,14 +104,14 @@ The MVP contract MUST NOT include RAG or splash DTO. Placeholder modules MAY exi
 - **THEN** there are no serializable RAG or splash request/response types
 - **AND** `rag.*` / `splash.*` IPC names are absent from the naming map
 
-### Requirement: Contract change does not implement use-cases or other hosts
-Типы запросов, ответов и progress-событий MVP SHALL оставаться payload-контрактом исполняемых use-cases `model` / `catalog` / `chat`. Use-cases MUST принимать и возвращать эти типы без переименования JSON-ключей. Этот атом MUST NOT добавлять Axum routes, Tauri commands или React `BackendClient`; обёртка транспорта по-прежнему на стороне host.
+### Requirement: Contract documentation cleanup preserves runtime behavior
+Очистка документации и источника истины SHALL сохранить существующие use-cases, DTO, JSON-ключи, события и hosts без нового runtime behavior. Change MUST NOT добавлять routes, commands или use-cases и MUST NOT менять on-disk формат.
 
 #### Scenario: Types without runtime behavior
-- **WHEN** выполняется generate, `catalog.get` или `chat.create`
-- **THEN** вход и выход MUST использовать существующие contract DTO (смысл полей и JSON-ключи без переименования)
-- **AND** `electron-app/` and `react-app/` remain unmodified as a requirement of this change
-- **AND** `underlator-server` and `underlator-tauri` do not gain HTTP routes or Tauri commands for the MVP API from this change
+- **WHEN** сравнивается поведение до и после удаления legacy references
+- **THEN** generate/catalog/chat MUST использовать прежние contract DTO и JSON-ключи
+- **AND** `underlator-server` routes и `underlator-tauri` commands MUST остаться прежними
+- **AND** IPC/SSE names, retry/timeout defaults и chat storage version MUST остаться совместимыми
 
 ### Requirement: Catalog requests MAY carry provider base URL for local merge
 Типы запросов `catalog.get` / `catalog.search` / `catalog.getModelInfo` SHALL допускать опциональные поля provider config `id` и `url` (или эквивалентный вложенный конфиг с теми же JSON-ключами), чтобы локальный merge списка установленных моделей мог использовать base URL из UI. При отсутствии полей MUST сохраняться поведение host process default. Смысл остальных полей каталога MUST NOT меняться.

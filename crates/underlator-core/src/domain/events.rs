@@ -1,7 +1,8 @@
 //! Единая модель progress-событий generate/install без транспорта host.
 //!
-//! Строковые имена совпадают с Electron IPC (`model:generate-progress`,
-//! `model:install-progress`). Core не знает IPC, WebSocket, SSE или Tauri emit.
+//! Строковые имена зафиксированы каноническим MVP-контрактом
+//! (`model:generate-progress`, `model:install-progress`). Core не знает IPC,
+//! WebSocket, SSE или Tauri emit.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -194,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn core_event_names_match_electron_ipc() {
+    fn core_event_names_match_stable_contract() {
         let generate = CoreEvent::GenerateProgress(GenerateProgress {
             model: "m".to_owned(),
             response: String::new(),

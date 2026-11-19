@@ -14,7 +14,7 @@ export const DEFAULT_MODEL = 'qwen3:0.6b';
 export const DEFAULT_URL = 'http://127.0.0.1:11434';
 
 /**
- * Дополнительные опции для оптимальной работы с Electron IPC.
+ * Дополнительные опции генерации через BackendClient.
  */
 export const DEFAULT_OPTIONS = {
   temperature: 0.7,

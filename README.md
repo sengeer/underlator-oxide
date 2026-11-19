@@ -29,7 +29,7 @@ Inspired by [Monkeytype](https://monkeytype.com/). Powered by [Ollama](https://o
 
 ## ✨ Features
 
-- 🦙 **Local LLM models** — automatic Ollama installation and management;
+- 🦙 **Local LLM models** — list, install, and remove models on your configured Ollama instance;
 - 🤔 **Support thinking models** — work with models that support the thinking process;
 - 💬 **Interactive chat** — full-featured chat with message history;
 - 🔍 **Intelligent document analysis (RAG)** — ask questions about documents and get answers based on their content;
@@ -45,19 +45,7 @@ Inspired by [Monkeytype](https://monkeytype.com/). Powered by [Ollama](https://o
 
 ## ⚙️ Initial Setup
 
-### Using Pre-installed Ollama
-
-> **Note:** The external Ollama provider is disabled on macOS due to Gatekeeper restrictions that block local network requests. In the future, we plan to pay for an Apple subscription to sign and notarize the code.
-
-If you already have external Ollama installed and running, select the **Ollama** provider in **API configuration** and manually specify the URL and model.
-
-### Using Embedded Ollama
-
-If Ollama was automatically downloaded when you first launched the application, select the **Embedded Ollama** provider in **API configuration** and download your desired model using the **manage models** button.
-
-### RAG Configuration
-
-To use RAG (intelligent document analysis), download an embedding model via **manage embedding models** in **RAG configuration** and adjust the RAG settings as needed.
+Underlator uses an existing Ollama instance; it does not embed or install the Ollama runtime. Start Ollama, then select the **Ollama** provider in **API configuration**, enter its base URL (`http://127.0.0.1:11434` by default on desktop), and choose a model. The **manage models** button lists, installs, and removes models at that configured URL.
 
 ## 📸 Screenshots
 
@@ -85,9 +73,28 @@ To use RAG (intelligent document analysis), download an embedding model via **ma
 
 </div>
 
-## 🖥️ Desktop Tauri (Rust dual-mode)
+## 🚀 Official Run Modes
 
-Native desktop host on Tauri 2 (alongside the temporary Electron app and the Docker server mode): build/run commands, OS prerequisites, canonical release artifacts (Linux AppImage, macOS arm64 DMG, Windows portable zip), and the verification matrix are in [docs/DESKTOP_TAURI.md](docs/DESKTOP_TAURI.md). Electron remains until atom 6.1 after the Fedora AppImage gate closes.
+### Desktop (Tauri 2)
+
+From the repository root:
+
+```bash
+cd crates/underlator-tauri
+cargo tauri dev --features desktop
+```
+
+The Tauri development command also starts the React frontend. OS prerequisites, release builds, and canonical artifacts are documented in [docs/DESKTOP_TAURI.md](docs/DESKTOP_TAURI.md).
+
+### Docker (HTTP server)
+
+From the repository root:
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+The React UI and HTTP API are available at `http://localhost:8080` by default. The server uses the `UNDERLATOR_AUTH_TOKEN` Bearer token (development default: `dev-change-me`); set a private token before any non-local deployment and rebuild the image. See [docker/docker-compose.yml](docker/docker-compose.yml) for port and environment configuration.
 
 ## 🔒 Security and Confidentiality
 
@@ -98,15 +105,26 @@ Underlator is designed for working with sensitive data:
 - ✅ **No internet required** — the application works completely autonomously
 - ✅ **No external requests** — your documents and messages never leave your computer
 
-## 🗑️ Uninstall
+## 🗑️ Application Data and Uninstall
 
-Application data (chats, RAG vectors, and other files) is stored in the standard Electron userData directory:
+Chats are stored under `<StorageRoot>/chats/`.
 
-- **macOS**: `~/Library/Application Support/Underlator/`
-- **Linux**: `~/.config/Underlator/`
-- **Windows**: `%APPDATA%\Underlator\` (typically `C:\Users\<username>\AppData\Roaming\Underlator\`)
+For **desktop Tauri**, `StorageRoot` is `UNDERLATOR_DATA_DIR` when set; otherwise it is the Tauri app data directory:
 
-To completely remove the application, delete this directory after uninstalling the application itself.
+- **Linux**: `~/.local/share/app.underlator.desktop/`
+- **macOS**: `~/Library/Application Support/app.underlator.desktop/`
+- **Windows**: `%APPDATA%\app.underlator.desktop\`
+
+For **Docker**, compose sets `StorageRoot` to `/data`, persists it in the `underlator-data` volume, and stores chats in `/data/chats/`. To remove application data, close the application and delete the selected desktop storage directory or Docker volume only after making any needed backup.
+
+## Legacy Chat Migration
+
+There is no automatic migration or migration script. To preserve chats from an archived Electron installation:
+
+1. Close both the legacy and new applications.
+2. Back up the legacy `userData` directory and the new storage location; verify that the backups can be read before copying anything.
+3. From the archived `<legacy userData>/chats/` directory, manually copy only `chats/*.chat.json` files into the new `<StorageRoot>/chats/` directory (create `chats` if needed). Use the desktop Tauri or Docker `/data` root described above. For Docker, `/data` is inside the `underlator-data` volume.
+4. Do not copy RAG vectors or Ollama binaries. Do not overwrite existing files without a verified backup; automatic merging and overwrite are not provided.
 
 ## 📄 License
 
