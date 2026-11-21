@@ -23,7 +23,7 @@ TO: Verified Fedora gate precedes legacy host removal
 - **AND** macOS / Windows MUST сохранить фактические статусы `unverified`, пока не выполнен отдельный smoke
 - **AND** обновление формулировок режимов MUST NOT переписывать строки матрицы или её выводы
 
-### Requirement: Gate before Electron removal (atom 6.1)
+### Requirement: Verified Fedora gate precedes legacy host removal
 Атом 7.1 SHALL опираться на уже закрытый gate 5.2: канонический AppImage запущен на Fedora Workstation 44, живой MVP smoke против Ollama пройден, macOS/Windows задокументированы. Перед удалением MUST быть проверено наличие этих доказательств; повторное требование сохранять legacy host после закрытия gate больше не действует.
 
 #### Scenario: Electron remains until 5.2 closed

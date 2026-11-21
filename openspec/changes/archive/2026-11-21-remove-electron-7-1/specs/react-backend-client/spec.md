@@ -17,7 +17,7 @@ TO: BackendClient exposes the core MVP surface
 
 ## MODIFIED Requirements
 
-### Requirement: BackendClient mirrors preload MVP surface
+### Requirement: BackendClient exposes the core MVP surface
 `react-app` SHALL предоставлять `BackendClient` с фасадами `model`, `catalog`, `chat` и 14 операциями MVP, канонически определёнными в `mvp-api-contract` и DTO `underlator-core`. Входные и выходные JSON-ключи MUST сохранить смешанный camelCase / snake_case без переименования. Успешные унарные ответы MUST быть телами контракта ядра без host-specific envelope. Клиент MUST NOT включать `rag.*` или `splash.*` в MVP surface.
 
 #### Scenario: Model catalog and chat operations are present

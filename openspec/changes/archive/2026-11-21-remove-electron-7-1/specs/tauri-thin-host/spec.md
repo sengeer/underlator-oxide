@@ -8,7 +8,7 @@ TO: Desktop MVP parity and live acceptance checklist
 
 ## MODIFIED Requirements
 
-### Requirement: Electron parity checklist for MVP scenarios
+### Requirement: Desktop MVP parity and live acceptance checklist
 До удаления legacy desktop transport SHALL быть зафиксирован live чеклист соответствия desktop Tauri каноническому MVP-контракту `model` / `catalog` / `chat`: happy-path, основные ошибки и persist. Приёмка MUST выполняться на реальном Tauri runtime против живого Ollama; unit/mock и статический анализ MUST NOT засчитываться как её замена. Доказательства закрытого AppImage gate 5.2 MUST предшествовать удалению.
 
 #### Scenario: Parity checklist covers MVP surfaces

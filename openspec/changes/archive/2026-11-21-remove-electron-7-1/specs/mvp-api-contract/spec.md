@@ -20,7 +20,7 @@ TO: Contract documentation cleanup preserves runtime behavior
 
 ## MODIFIED Requirements
 
-### Requirement: Model contract types mirror preload
+### Requirement: Model contract is self-contained
 Ядро SHALL публиковать serializable DTO канонической поверхности `model`: `generate`, `stop`, `install`, `remove`, `list`. Этот OpenSpec и DTO `underlator-core/src/domain/` MUST быть самодостаточным источником полей и их смысла; внешний legacy source для чтения контракта MUST NOT требоваться.
 
 #### Scenario: Generate request and unary result
@@ -41,7 +41,7 @@ TO: Contract documentation cleanup preserves runtime behavior
 - **THEN** serialized request MUST поддерживать этот `url` и provider `id`
 - **AND** JSON-ключи provider config MUST оставаться `id` и `url`
 
-### Requirement: Catalog contract types mirror preload
+### Requirement: Catalog contract is self-contained
 Ядро SHALL публиковать serializable DTO канонической поверхности `catalog`: `get`, `search`, `getModelInfo`. Поля фильтров, snapshot и model card MUST полностью определяться этим контрактом и DTO ядра без обращения к внешнему legacy source.
 
 #### Scenario: Get and search return a catalog snapshot
@@ -56,7 +56,7 @@ TO: Contract documentation cleanup preserves runtime behavior
 - **AND** model card MUST содержать `id`, `name`, `displayName`, `size`, `createdAt`, `modifiedAt`, `type` = `ollama`, `format`, `parameterSize`, `quantizationLevel` и задокументированные optional description/version/digest/tags/compatibility
 - **AND** `getModelInfo` MUST допускать `null`, когда модель не найдена
 
-### Requirement: Chat contract types mirror preload
+### Requirement: Chat contract is self-contained
 Ядро SHALL публиковать serializable DTO канонической поверхности `chat`: `create`, `get`, `update`, `delete`, `list`, `addMessage`. Структура chat/message, фильтров и ответов MUST читаться только из этого контракта и DTO ядра.
 
 #### Scenario: Chat entity and message
@@ -111,7 +111,7 @@ TO: Contract documentation cleanup preserves runtime behavior
 - **AND** JSON MUST быть пригоден без host-specific wrapper внутри core
 - **AND** envelope вида `success` / `data` / `error` / `id` MUST NOT требоваться как часть core contract
 
-### Requirement: Contract change does not implement use-cases or other hosts
+### Requirement: Contract documentation cleanup preserves runtime behavior
 Очистка документации и источника истины SHALL сохранить существующие use-cases, DTO, JSON-ключи, события и hosts без нового runtime behavior. Change MUST NOT добавлять routes, commands или use-cases и MUST NOT менять on-disk формат.
 
 #### Scenario: Types without runtime behavior

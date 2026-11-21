@@ -8,7 +8,7 @@ TO: Supported application trees match dual-mode delivery
 
 ## MODIFIED Requirements
 
-### Requirement: Existing Electron and React apps remain intact
+### Requirement: Supported application trees match dual-mode delivery
 Репозиторий SHALL сохранять `react-app` и Rust workspace из core/server/Tauri как единственные поддерживаемые application trees для dual-mode MVP. Каталог legacy desktop host MUST NOT требоваться для build, test, run или docker; его прежние версии MAY быть восстановлены только из git-истории или согласованного tag/архива.
 
 #### Scenario: Legacy apps still present
