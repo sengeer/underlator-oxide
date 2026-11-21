@@ -1,34 +1,46 @@
 //! Use-cases поверхности `model`: generate / stop / install / remove / list.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use futures_util::StreamExt;
 
 use crate::domain::error::CoreError;
 use crate::domain::events::{GenerateProgress, InstallProgress};
 use crate::domain::model::dto::{
-    GenerateRequest, GenerateResult, InstallRequest, ListModelsRequest, ListModelsResponse,
-    RemoveRequest, StopRequest, UnarySuccess, request_provider_id, request_provider_url,
+    DEFAULT_PROVIDER_ID, GenerateRequest, GenerateResult, InstallRequest, ListModelsRequest,
+    ListModelsResponse, RemoveRequest, StopRequest, UnarySuccess, request_provider_id,
+    request_provider_url,
 };
 use crate::ports::{LlmProvider, LlmProviderFactory};
 
-/// Исполняемые use-cases `model` на process-scoped [`LlmProvider`].
+/// Исполняемые use-cases `model` на выбранном по запросу [`LlmProvider`].
 ///
-/// Generate/`stop` всегда на process `Arc`. List/install/remove при непустом
-/// `url` в запросе идут через краткоживущий провайдер из [`LlmProviderFactory`].
+/// Все операции используют `url`/`id` из запроса: при непустом `url` —
+/// краткоживущий провайдер из [`LlmProviderFactory`] (настройки UI),
+/// иначе — process-scoped `Arc`. Активный generate запоминается, чтобы
+/// `stop` и следующий generate отменяли именно его поток.
 #[derive(Clone)]
 pub struct ModelService {
     provider: Arc<dyn LlmProvider>,
     factory: Arc<dyn LlmProviderFactory>,
+    active_generate: Arc<Mutex<Option<Arc<dyn LlmProvider>>>>,
 }
 
 impl ModelService {
     /// Собирает сервис вокруг process-провайдера и фабрики override.
     pub fn new(provider: Arc<dyn LlmProvider>, factory: Arc<dyn LlmProviderFactory>) -> Self {
-        Self { provider, factory }
+        Self {
+            provider,
+            factory,
+            active_generate: Arc::new(Mutex::new(None)),
+        }
     }
 
     /// Потоковая генерация: callback прогресса и конкатенация `response`.
+    ///
+    /// Провайдер выбирается по `id`/`url` запроса, поэтому смена base URL
+    /// в настройках UI применяется со следующего запроса. Новый generate
+    /// отменяет предыдущий активный поток, как и при общем провайдере.
     pub async fn generate(
         &self,
         request: GenerateRequest,
@@ -39,19 +51,24 @@ impl ModelService {
                 message: "model и prompt обязательны".to_owned(),
             });
         }
-        let mut stream = self.provider.generate_stream(&request).await?;
-        let mut out = String::new();
-        while let Some(item) = stream.next().await {
-            let chunk = item?;
-            out.push_str(&chunk.response);
-            on_progress(chunk);
+        let provider = self.resolve_generate_provider(&request)?;
+
+        if let Some(previous) = self.take_active_generate() {
+            let _ = previous.stop().await;
         }
-        Ok(out)
+        self.set_active_generate(Arc::clone(&provider));
+
+        let result = Self::stream_generate(provider.as_ref(), request, &mut on_progress).await;
+        self.clear_active_generate_if(&provider);
+        result
     }
 
-    /// Останавливает активную генерацию на том же экземпляре провайдера.
+    /// Останавливает активную генерацию на её экземпляре провайдера.
     pub async fn stop(&self, _request: StopRequest) -> Result<(), CoreError> {
-        self.provider.stop().await
+        let target = self
+            .take_active_generate()
+            .unwrap_or_else(|| Arc::clone(&self.provider));
+        target.stop().await
     }
 
     /// Установка модели с кадрами прогресса и унарным `{ success: true }`.
@@ -98,6 +115,70 @@ impl ModelService {
         match request_provider_url(url) {
             Some(url) => self.factory.create(request_provider_id(id), url),
             None => Ok(Arc::clone(&self.provider)),
+        }
+    }
+
+    /// Провайдер generate по строковым `id`/`url` из [`GenerateRequest`].
+    ///
+    /// Пустой `url` — process-провайдер (поведение без настроек UI);
+    /// непустой — фабрика, чтобы учитывать base URL из settings.
+    fn resolve_generate_provider(
+        &self,
+        request: &GenerateRequest,
+    ) -> Result<Arc<dyn LlmProvider>, CoreError> {
+        let url = request.url.trim();
+        if url.is_empty() {
+            return Ok(Arc::clone(&self.provider));
+        }
+        let id = request.id.trim();
+        let id = if id.is_empty() {
+            DEFAULT_PROVIDER_ID
+        } else {
+            id
+        };
+        self.factory.create(id, url)
+    }
+
+    /// Потоковая генерация на конкретном провайдере без мутаций состояния.
+    async fn stream_generate(
+        provider: &dyn LlmProvider,
+        request: GenerateRequest,
+        on_progress: &mut impl FnMut(GenerateProgress),
+    ) -> Result<GenerateResult, CoreError> {
+        let mut stream = provider.generate_stream(&request).await?;
+        let mut out = String::new();
+        loop {
+            match stream.next().await {
+                Some(Ok(chunk)) => {
+                    out.push_str(&chunk.response);
+                    on_progress(chunk);
+                }
+                Some(Err(err)) => return Err(err),
+                None => return Ok(out),
+            }
+        }
+    }
+
+    fn take_active_generate(&self) -> Option<Arc<dyn LlmProvider>> {
+        self.active_generate
+            .lock()
+            .ok()
+            .and_then(|mut slot| slot.take())
+    }
+
+    fn set_active_generate(&self, provider: Arc<dyn LlmProvider>) {
+        if let Ok(mut slot) = self.active_generate.lock() {
+            *slot = Some(provider);
+        }
+    }
+
+    fn clear_active_generate_if(&self, provider: &Arc<dyn LlmProvider>) {
+        if let Ok(mut slot) = self.active_generate.lock()
+            && slot
+                .as_ref()
+                .is_some_and(|active| Arc::ptr_eq(active, provider))
+        {
+            *slot = None;
         }
     }
 }
@@ -309,8 +390,74 @@ mod tests {
             think: None,
             context: None,
             id: "ollama".to_owned(),
-            url: "http://127.0.0.1:11434".to_owned(),
+            // Пустой url — process-провайдер; тесты настроек задают url явно.
+            url: String::new(),
         }
+    }
+
+    #[tokio::test]
+    async fn generate_with_configured_url_uses_factory_provider() {
+        let process = Arc::new(MockProvider::new());
+        let configured = Arc::new(MockProvider::new());
+        let created = Arc::new(AtomicUsize::new(0));
+        let last_url = Arc::new(Mutex::new(None));
+        let factory = Arc::new(TrackingFactory {
+            created: created.clone(),
+            last_url: last_url.clone(),
+            override_provider: configured.clone(),
+        });
+        let svc = ModelService::new(process.clone(), factory);
+
+        let mut req = generate_req("привет");
+        req.url = "http://10.0.0.5:11434".to_owned();
+        let text = svc.generate(req, |_| {}).await.expect("generate");
+
+        assert_eq!(text, "Hello world");
+        assert_eq!(configured.generate_calls.load(Ordering::SeqCst), 1);
+        assert_eq!(process.generate_calls.load(Ordering::SeqCst), 0);
+        assert_eq!(created.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            last_url.lock().expect("url").as_deref(),
+            Some("http://10.0.0.5:11434")
+        );
+    }
+
+    #[tokio::test]
+    async fn stop_cancels_generate_on_configured_provider() {
+        let process = Arc::new(MockProvider::new());
+        let mut configured = MockProvider::new();
+        configured.hold_after_first = true;
+        let configured = Arc::new(configured);
+        let factory = Arc::new(TrackingFactory {
+            created: Arc::new(AtomicUsize::new(0)),
+            last_url: Arc::new(Mutex::new(None)),
+            override_provider: configured.clone(),
+        });
+        let svc = ModelService::new(process.clone(), factory);
+
+        let mut req = generate_req("привет");
+        req.url = "http://10.0.0.5:11434".to_owned();
+        let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+        let tx = std::sync::Mutex::new(Some(tx));
+        let generate = {
+            let svc = svc.clone();
+            tokio::spawn(async move {
+                svc.generate(req, |_| {
+                    if let Ok(mut slot) = tx.lock()
+                        && let Some(sender) = slot.take()
+                    {
+                        let _ = sender.send(());
+                    }
+                })
+                .await
+            })
+        };
+        rx.await.expect("first chunk");
+        svc.stop(StopRequest {}).await.expect("stop");
+        let err = generate.await.expect("join").expect_err("cancelled");
+        assert!(matches!(err, CoreError::ProviderCancelled));
+        assert_eq!(host_error_class(&err), HostErrorClass::Cancelled);
+        assert!(!process.cancelled.load(Ordering::SeqCst));
     }
 
     #[tokio::test]

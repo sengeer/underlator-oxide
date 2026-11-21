@@ -15,10 +15,10 @@ use serde_json::{Value, json};
 use tempfile::tempdir;
 use tower::ServiceExt;
 use underlator_core::{
-    CatalogLibrary, CatalogService, ChatService, CoreError, CoreLlmProviderFactory,
-    FilesystemChatStore, GenerateProgress, GenerateRequest, InstallProgress, InstallRequest,
-    InstallStatus, ListModelsResponse, LlmProvider, MemoryChatStore, ModelService, OllamaModel,
-    ProviderStream, RemoveRequest, StorageRoot, UnarySuccess,
+    CatalogLibrary, CatalogService, ChatService, CoreError, FilesystemChatStore, GenerateProgress,
+    GenerateRequest, InstallProgress, InstallRequest, InstallStatus, ListModelsResponse,
+    LlmProvider, LlmProviderFactory, MemoryChatStore, ModelService, OllamaModel, ProviderStream,
+    RemoveRequest, StorageRoot, UnarySuccess,
 };
 
 use crate::config::ServerConfig;
@@ -187,6 +187,24 @@ impl CatalogLibrary for EmptyLibrary {
 struct Harness {
     app: Router,
     provider: Arc<MockProvider>,
+    /// Последний `url`, переданный host'ом в фабрику провайдеров.
+    factory_url: Arc<Mutex<Option<String>>>,
+}
+
+/// Фабрика тестов: любой override-провайдер — тот же mock, что и process.
+///
+/// Позволяет проверять, что `generate` с `url` из запроса идёт через фабрику,
+/// не выходя в сеть.
+struct MockFactory {
+    provider: Arc<MockProvider>,
+    last_url: Arc<Mutex<Option<String>>>,
+}
+
+impl LlmProviderFactory for MockFactory {
+    fn create(&self, _provider_id: &str, url: &str) -> Result<Arc<dyn LlmProvider>, CoreError> {
+        *self.last_url.lock().expect("url") = Some(url.to_owned());
+        Ok(self.provider.clone())
+    }
 }
 
 fn config_from(pairs: &[(&str, &str)]) -> ServerConfig {
@@ -206,8 +224,11 @@ fn harness_with(
     let mut provider = MockProvider::new();
     provider.hold_after_first = hold;
     let provider = Arc::new(provider);
-    let factory: Arc<dyn underlator_core::LlmProviderFactory> =
-        Arc::new(CoreLlmProviderFactory::new());
+    let factory_url: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
+    let factory: Arc<dyn underlator_core::LlmProviderFactory> = Arc::new(MockFactory {
+        provider: provider.clone(),
+        last_url: factory_url.clone(),
+    });
     let model = ModelService::new(provider.clone(), Arc::clone(&factory));
     let catalog = Arc::new(CatalogService::new(
         provider.clone(),
@@ -216,7 +237,11 @@ fn harness_with(
     ));
     let chat = Arc::new(ChatService::new(store));
     let app = router(AppState::new(model, catalog, chat, &config));
-    Harness { app, provider }
+    Harness {
+        app,
+        provider,
+        factory_url,
+    }
 }
 
 fn harness() -> Harness {
@@ -435,8 +460,9 @@ async fn model_list_and_naming_map_routes_exist() {
 
 #[tokio::test]
 async fn generate_streams_two_chunks_and_result() {
+    let h = harness();
     let (status, body, headers) = send(
-        harness().app,
+        h.app,
         json_request(
             Method::POST,
             "/api/model/generate",
@@ -445,6 +471,11 @@ async fn generate_streams_two_chunks_and_result() {
     )
     .await;
     assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        h.factory_url.lock().expect("url").as_deref(),
+        Some("http://example.invalid:9"),
+        "generate должен идти через провайдера, выбранного по url запроса"
+    );
     let ct = headers
         .get(header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
@@ -572,17 +603,18 @@ fn handlers_do_not_hardcode_ollama_or_bypass_core() {
 }
 
 #[test]
-fn tauri_has_no_mvp_commands() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("underlator-tauri")
-        .join("src");
+fn server_sources_do_not_wire_tauri() {
+    // Сервер — отдельный driving adapter: tauri-команды и tauri-runtime
+    // живут только в underlator-tauri, а не в HTTP-host.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");
     let mut files = Vec::new();
     collect_rs(&root, &mut files);
     for path in files {
+        if path.file_name().and_then(|n| n.to_str()) == Some("http_tests.rs") {
+            continue;
+        }
         let text = std::fs::read_to_string(&path).expect("read");
-        assert!(!text.contains(concat!("model", "_generate")));
-        assert!(!text.contains("#[tauri::command]"));
+        assert!(!text.contains("tauri::"));
         assert!(!text.contains("invoke_handler"));
     }
 }

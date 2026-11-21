@@ -10,10 +10,10 @@ use futures_util::stream;
 use tempfile::tempdir;
 use underlator_core::{
     CatalogLibrary, CatalogService, ChatMessageRole, ChatModelRef, ChatService, CoreError,
-    CoreLlmProviderFactory, CreateChatRequest, FilesystemChatStore, GenerateProgress,
-    GenerateRequest, GetChatRequest, GetModelInfoRequest, InstallProgress, InstallRequest,
-    InstallStatus, ListModelsRequest, ListModelsResponse, LlmProvider, ModelService, OllamaModel,
-    ProviderStream, RemoveRequest, StorageRoot, UnarySuccess,
+    CreateChatRequest, FilesystemChatStore, GenerateProgress, GenerateRequest, GetChatRequest,
+    GetModelInfoRequest, InstallProgress, InstallRequest, InstallStatus, ListModelsRequest,
+    ListModelsResponse, LlmProvider, LlmProviderFactory, ModelService, OllamaModel, ProviderStream,
+    RemoveRequest, StorageRoot, UnarySuccess,
 };
 
 use underlator_tauri::commands::{catalog, chat, model};
@@ -179,12 +179,32 @@ impl CatalogLibrary for EmptyLibrary {
     }
 }
 
-fn harness(data_dir: PathBuf, hold: bool) -> (AppState, Arc<MockProvider>) {
+/// Фабрика тестов: override-провайдер совпадает с process mock,
+/// сеть не используется; запоминается последний `url` запроса.
+struct MockFactory {
+    provider: Arc<MockProvider>,
+    last_url: Arc<Mutex<Option<String>>>,
+}
+
+impl LlmProviderFactory for MockFactory {
+    fn create(&self, _provider_id: &str, url: &str) -> Result<Arc<dyn LlmProvider>, CoreError> {
+        *self.last_url.lock().expect("url") = Some(url.to_owned());
+        Ok(self.provider.clone())
+    }
+}
+
+fn harness_full(
+    data_dir: PathBuf,
+    hold: bool,
+) -> (AppState, Arc<MockProvider>, Arc<Mutex<Option<String>>>) {
     let mut provider = MockProvider::new();
     provider.hold_after_first = hold;
     let provider = Arc::new(provider);
-    let factory: Arc<dyn underlator_core::LlmProviderFactory> =
-        Arc::new(CoreLlmProviderFactory::new());
+    let last_url = Arc::new(Mutex::new(None));
+    let factory: Arc<dyn underlator_core::LlmProviderFactory> = Arc::new(MockFactory {
+        provider: provider.clone(),
+        last_url: last_url.clone(),
+    });
     let model = ModelService::new(provider.clone(), Arc::clone(&factory));
     let catalog = Arc::new(CatalogService::new(
         provider.clone(),
@@ -196,7 +216,13 @@ fn harness(data_dir: PathBuf, hold: bool) -> (AppState, Arc<MockProvider>) {
     (
         AppState::new(model, catalog, chat, data_dir),
         provider,
+        last_url,
     )
+}
+
+fn harness(data_dir: PathBuf, hold: bool) -> (AppState, Arc<MockProvider>) {
+    let (state, provider, _) = harness_full(data_dir, hold);
+    (state, provider)
 }
 
 fn gen_req(model: &str, prompt: &str) -> GenerateRequest {
@@ -244,7 +270,7 @@ async fn model_list_remove_stop_share_provider_arc() {
 #[tokio::test]
 async fn generate_emits_progress_and_concatenates() {
     let dir = tempdir().expect("temp");
-    let (state, _) = harness(dir.path().to_path_buf(), false);
+    let (state, _, last_url) = harness_full(dir.path().to_path_buf(), false);
     let frames = Arc::new(Mutex::new(Vec::new()));
     let frames_cb = Arc::clone(&frames);
 
@@ -255,6 +281,11 @@ async fn generate_emits_progress_and_concatenates() {
     .expect("generate");
 
     assert_eq!(text, "Hello world");
+    assert_eq!(
+        last_url.lock().expect("url").as_deref(),
+        Some("http://127.0.0.1:11434"),
+        "generate должен использовать url из настроек/запроса"
+    );
     let got = frames.lock().expect("lock");
     assert!(got.len() >= 2, "ожидалось ≥2 progress-кадра, got {}", got.len());
 }
