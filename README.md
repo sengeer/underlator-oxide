@@ -6,12 +6,14 @@
 
 <div align="center">
 
-Desktop application for working with local LLMs: text and document translation, interactive chat, intelligent document analysis.
+Desktop application for working with local LLMs: text and document translation, interactive chat.
 
 [![license][license-image]][license-url]
 [![release][release-image]][release-url]
 
 English &nbsp;&nbsp;|&nbsp;&nbsp; [Russian](README_RU.md)
+
+The earlier Electron-based version is archived at [sengeer/underlator](https://github.com/sengeer/underlator) and kept for history only.
 
 ![demo](screenshots/demo.gif)
 
@@ -19,11 +21,11 @@ Inspired by [Monkeytype](https://monkeytype.com/). Powered by [Ollama](https://o
 
 [license-image]: https://img.shields.io/badge/license-BSD--3--Clause%20%2B%20Branding-7D6EDE.svg
 
-[license-url]: https://github.com/sengeer/underlator/blob/main/LICENSE
+[license-url]: https://github.com/sengeer/underlator-oxide/blob/main/LICENSE
 
-[release-image]: https://img.shields.io/github/v/release/sengeer/underlator.svg
+[release-image]: https://img.shields.io/github/v/release/sengeer/underlator-oxide.svg
 
-[release-url]: https://github.com/sengeer/underlator/releases/latest
+[release-url]: https://github.com/sengeer/underlator-oxide/releases/latest
 
 </div>
 
@@ -32,7 +34,6 @@ Inspired by [Monkeytype](https://monkeytype.com/). Powered by [Ollama](https://o
 - 🦙 **Local LLM models** — list, install, and remove models on your configured Ollama instance;
 - 🤔 **Support thinking models** — work with models that support the thinking process;
 - 💬 **Interactive chat** — full-featured chat with message history;
-- 🔍 **Intelligent document analysis (RAG)** — ask questions about documents and get answers based on their content;
 - 📝 **Text translator** — quick translation of plain text;
 - 🕹️ **PDF document handling** — view, translate, and analyze PDF files;
 - 📄 **PDF working modes**:
@@ -124,7 +125,7 @@ There is no automatic migration or migration script. To preserve chats from an a
 1. Close both the legacy and new applications.
 2. Back up the legacy `userData` directory and the new storage location; verify that the backups can be read before copying anything.
 3. From the archived `<legacy userData>/chats/` directory, manually copy only `chats/*.chat.json` files into the new `<StorageRoot>/chats/` directory (create `chats` if needed). Use the desktop Tauri or Docker `/data` root described above. For Docker, `/data` is inside the `underlator-data` volume.
-4. Do not copy RAG vectors or Ollama binaries. Do not overwrite existing files without a verified backup; automatic merging and overwrite are not provided.
+4. Do not copy vector indexes, embeddings, or Ollama binaries. Do not overwrite existing files without a verified backup; automatic merging and overwrite are not provided.
 
 ## 📄 License
 

@@ -1,7 +1,8 @@
 //! Desktop-only заготовки: mailto / native dialogs.
 //!
 //! **Не блокер MVP** `model` / `catalog` / `chat`. Splash и embedded Ollama —
-//! явно later: runtime installer / splash lifecycle здесь **не** реализованы.
+//! `dropped by ADR` (`docs/adr/0001-embedded-ollama-and-splash-dropped.md`);
+//! runtime installer / splash lifecycle здесь **не** реализованы.
 
 /// Открыть `mailto:` (заготовка; не входит в MVP DoD).
 ///
@@ -18,11 +19,12 @@ pub fn open_file_dialog_stub() -> Result<Option<String>, String> {
     Err("native dialog: заготовка desktop-only; не блокер MVP".to_owned())
 }
 
-/// Splash / embedded Ollama — **later**, без runtime.
+/// Splash / embedded Ollama — **dropped by ADR**, без runtime.
 ///
-/// См. architectural plan §5.1 / out of scope MVP dual-mode.
+/// См. `docs/adr/0001-embedded-ollama-and-splash-dropped.md`.
+/// Restoration not planned; requires new change + ADR update.
 pub fn splash_and_embedded_ollama_later() {
-    // no-op: explicit later, no runtime
+    // no-op: dropped by ADR, no runtime
 }
 
 #[cfg(test)]

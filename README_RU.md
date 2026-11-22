@@ -6,12 +6,14 @@
 
 <div align="center">
 
-Десктопное приложение для работы с локальными LLM: перевод текста и документов, интерактивный чат, интеллектуальный анализ документов.
+Десктопное приложение для работы с локальными LLM: перевод текста и документов, интерактивный чат.
 
 [![license][license-image]][license-url]
 [![release][release-image]][release-url]
 
 [Английский](README.md) &nbsp;&nbsp;|&nbsp;&nbsp; Русский
+
+Архивная Electron-версия доступна на [sengeer/underlator](https://github.com/sengeer/underlator) (archived) и сохранена только как история.
 
 ![Демо](screenshots/demo.gif)
 
@@ -19,11 +21,11 @@
 
 [license-image]: https://img.shields.io/badge/license-BSD--3--Clause%20%2B%20Branding-7D6EDE.svg
 
-[license-url]: https://github.com/Sengeer/underlator/blob/main/LICENSE
+[license-url]: https://github.com/sengeer/underlator-oxide/blob/main/LICENSE
 
-[release-image]: https://img.shields.io/github/v/release/underlator/underlator.svg
+[release-image]: https://img.shields.io/github/v/release/sengeer/underlator-oxide.svg
 
-[release-url]: https://github.com/Sengeer/underlator/releases/latest
+[release-url]: https://github.com/sengeer/underlator-oxide/releases/latest
 
 </div>
 
@@ -32,7 +34,6 @@
 - 🦙 **Работа с локальными LLM моделями** — просмотр, установка и удаление моделей на настроенном экземпляре Ollama;
 - 🤔 **Поддержка думающих моделей** — работа с моделями, поддерживающими процесс размышления;
 - 💬 **Интерактивный чат** — полнофункциональный чат с сохранением истории сообщений;
-- 🔍 **Интеллектуальный анализ документов (RAG)** — задавайте вопросы по документам, получайте ответы на основе их содержимого;
 - 📝 **Переводчик текста** — быстрый перевод обычного текста;
 - 🕹️ **Работа с PDF-документами** — просмотр, перевод и анализ PDF файлов;
 - 📄 **Режимы работы с PDF**:
@@ -84,7 +85,7 @@ cd crates/underlator-tauri
 cargo tauri dev --features desktop
 ```
 
-Команда Tauri для разработки также запускает React frontend. Зависимости ОС, release-сборка и канонические артефакты описаны в [docs/DESKTOP_TAURI.md](docs/DESKTOP_TAURI.md).
+Команда Tauri для разработки также запускает React frontend. Зависимости ОС, release-сборка и канонические артефакты описаны в [docs/DESKTOP_TAURI_RU.md](docs/DESKTOP_TAURI_RU.md).
 
 ### Docker (HTTP server)
 
@@ -124,7 +125,7 @@ Underlator разработан для работы с чувствительн�
 1. Закройте и legacy, и новое приложение.
 2. Создайте backup legacy-директории `userData` и нового хранилища; перед копированием убедитесь, что backup читается.
 3. Из архивной директории `<legacy userData>/chats/` вручную скопируйте только файлы `chats/*.chat.json` в новую директорию `<StorageRoot>/chats/` (при необходимости создайте `chats`). Используйте указанный выше корень desktop Tauri или Docker `/data`; для Docker `/data` находится внутри volume `underlator-data`.
-4. Не переносите RAG vectors и бинарные файлы Ollama. Не перезаписывайте существующие файлы без проверенного backup; автоматический merge и overwrite не предусмотрены.
+4. Не переносите векторные индексы, эмбеддинги и бинарные файлы Ollama. Не перезаписывайте существующие файлы без проверенного backup; автоматический merge и overwrite не предусмотрены.
 
 ## 📄 Лицензия
 
@@ -132,4 +133,4 @@ BSD-3-Clause + Branding (см. [LICENSE](LICENSE))
 
 ## 👤 Автор
 
-Sengeer
+sengeer

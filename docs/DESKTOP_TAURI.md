@@ -1,37 +1,39 @@
-# Desktop Tauri (атом 5.2)
+# Desktop Tauri (atom 5.2)
 
-Документ для клонировавших репозиторий: как собрать и запустить **desktop**-хост Underlator на Tauri 2, какие native deps нужны, какие канонические артефакты получаются и что уже проверено на машинах.
+English &nbsp;&nbsp;|&nbsp;&nbsp; [Russian](DESKTOP_TAURI_RU.md)
 
-## Официальные режимы: Desktop (Tauri) и Docker (server)
+A document for people who cloned the repository: how to build and run the **desktop** Underlator host on Tauri 2, which native dependencies are required, which canonical artifacts are produced, and what has already been verified on real machines.
 
-| Режим | Host | Когда использовать |
+## Official modes: Desktop (Tauri) and Docker (server)
+
+| Mode | Host | When to use |
 | --- | --- | --- |
-| **Desktop (Tauri)** | `crates/underlator-tauri` + `react-app` | Нативная сборка и запуск на Linux / macOS / Windows |
-| **Docker (server)** | `crates/underlator-server` + compose | Серверный HTTP/SSE host; UI через браузер к API |
+| **Desktop (Tauri)** | `crates/underlator-tauri` + `react-app` | Native build and run on Linux / macOS / Windows |
+| **Docker (server)** | `crates/underlator-server` + compose | Server-side HTTP/SSE host; UI in a browser against the API |
 
-Gate 5.2 закрыт: канонический AppImage прошёл живой MVP smoke на Fedora Workstation 44, `acceptance-smoke.json` содержит `all_ok`, а macOS/Windows имеют задокументированные ниже фактические статусы. Это историческое подтверждение готовности desktop-поставки не добавляет третий поддерживаемый режим.
+Gate 5.2 is closed: the canonical AppImage passed a live MVP smoke on Fedora Workstation 44, `acceptance-smoke.json` contains `all_ok`, and macOS/Windows have the actual statuses documented below. This historical confirmation of desktop delivery readiness does not add a third supported mode.
 
-## Переменные окружения
+## Environment variables
 
-| Переменная | Назначение | Default |
+| Variable | Purpose | Default |
 | --- | --- | --- |
-| `OLLAMA_BASE_URL` | URL локального Ollama для desktop | `http://127.0.0.1:11434` (не docker DNS `http://ollama:11434`) |
-| `UNDERLATOR_DATA_DIR` | Override корня данных чатов | app data dir платформы (см. ниже) |
-| `UNDERLATOR_PROVIDER_ID` | Id провайдера в factory ядра | `ollama` |
+| `OLLAMA_BASE_URL` | URL of the local Ollama instance for desktop | `http://127.0.0.1:11434` (not the docker DNS name `http://ollama:11434`) |
+| `UNDERLATOR_DATA_DIR` | Override the chat data root | platform app data dir (see below) |
+| `UNDERLATOR_PROVIDER_ID` | Provider id in the core factory | `ollama` |
 
-Каталог данных desktop (если `UNDERLATOR_DATA_DIR` не задан) — стандартный app data dir Tauri / ОС, например:
+The desktop data directory (when `UNDERLATOR_DATA_DIR` is not set) is the standard Tauri / OS app data directory, for example:
 
-- Linux: `~/.local/share/app.underlator.desktop/` (или аналог по идентификатору `app.underlator.desktop`)
+- Linux: `~/.local/share/app.underlator.desktop/` (or an equivalent path based on the `app.underlator.desktop` identifier)
 - macOS: `~/Library/Application Support/app.underlator.desktop/`
 - Windows: `%APPDATA%\app.underlator.desktop\`
 
-Точный путь зависит от WebView/OS conventions; для smoke-тестов удобно задать явный `UNDERLATOR_DATA_DIR=/tmp/underlator-smoke`.
+The exact path depends on WebView/OS conventions; for smoke tests it is convenient to set an explicit `UNDERLATOR_DATA_DIR=/tmp/underlator-smoke`.
 
 ## Native prerequisites
 
-### Linux (Fedora Workstation 44 — машина приёмки)
+### Linux (Fedora Workstation 44 — acceptance machine)
 
-WebView / GTK (сборка и runtime):
+WebView / GTK (build and runtime):
 
 ```bash
 sudo dnf install -y \
@@ -44,78 +46,78 @@ sudo dnf install -y \
   gcc gcc-c++ make
 ```
 
-AppImage / FUSE (сборка bundler + запуск `.AppImage`):
+AppImage / FUSE (bundler build + running the `.AppImage`):
 
 ```bash
 sudo dnf install -y fuse fuse3
-# при необходимости для linuxdeploy / appimagetool bundler подтянет сам;
-# если bundler ругается на отсутствующие libs — доустановите по тексту ошибки.
+# linuxdeploy / appimagetool may pull additional packages itself;
+# if the bundler complains about missing libs, install them as the error text suggests.
 ```
 
-Также нужны: Rust toolchain (`rustup`), Node.js + npm (для `react-app`), `cargo-tauri` CLI:
+Also required: the Rust toolchain (`rustup`), Node.js + npm (for `react-app`), and the `cargo-tauri` CLI:
 
 ```bash
 cargo install tauri-cli --version "^2" --locked
 ```
 
-### macOS (только Apple Silicon arm64 в скоупе 5.2)
+### macOS (Apple Silicon arm64 only, in scope 5.2)
 
 - Xcode Command Line Tools: `xcode-select --install`
-- Rust target: `rustup target add aarch64-apple-darwin` (на Apple Silicon обычно уже есть)
+- Rust target: `rustup target add aarch64-apple-darwin` (usually already present on Apple Silicon)
 - Node.js + npm
 - `cargo install tauri-cli --version "^2" --locked`
-- Intel `x86_64-apple-darwin` **вне** скоупа 5.2
+- Intel `x86_64-apple-darwin` is **out of scope** for 5.2
 
 ### Windows 11 (portable zip)
 
-- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) / VS Build Tools с workload «Desktop development with C++»
-- WebView2 Runtime (обычно уже есть на Win11; иначе Evergreen Bootstrapper)
+- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) / VS Build Tools with the "Desktop development with C++" workload
+- WebView2 Runtime (usually present on Win11; otherwise use the Evergreen Bootstrapper)
 - Rust `x86_64-pc-windows-msvc`, Node.js + npm, `cargo-tauri` 2.x
-- Утилита `zip` (Git Bash / PowerShell `Compress-Archive`) для канонического portable-архива
+- The `zip` utility (Git Bash / PowerShell `Compress-Archive`) for the canonical portable archive
 
-## Типичные ошибки deps
+## Common dependency errors
 
-| Симптом | Что проверить |
+| Symptom | What to check |
 | --- | --- |
-| `webkit2gtk` / `javascriptcoregtk` not found | пакеты `webkit2gtk4.1-devel` (Fedora 40+) |
+| `webkit2gtk` / `javascriptcoregtk` not found | `webkit2gtk4.1-devel` packages (Fedora 40+) |
 | `Package 'gtk+-3.0' not found` | `gtk3-devel` |
-| AppImage: `fuse: failed to open /dev/fuse` | `fuse`/`fuse3`, права пользователя, иногда `./Underlator-….AppImage --appimage-extract-and-run` |
-| bundling: `Strip call failed` / `.relr.dyn` | На Fedora: `NO_STRIP=1` (и при нужде `APPIMAGE_EXTRACT_AND_RUN=1`) перед `cargo tauri build` |
-| Запуск открывает диалог AppImageLauncher | `APPIMAGELAUNCHER_DISABLE=1` и/или `--appimage-extract-and-run` |
-| `GStreamer element appsink not found` | Хостовый `gstreamer1-plugins-base` (часто warning без краша UI) |
-| Серое/пустое окно + `Failed to create GBM buffer` | WebKitGTK DMABUF; в host на Linux выставляется `WEBKIT_DISABLE_DMABUF_RENDERER=1` до webview (см. Tauri linux-graphics). Пересоберите AppImage после фикса. Вручную: `WEBKIT_DISABLE_DMABUF_RENDERER=1 ./….AppImage` |
-| Кнопка «Чаты» → «приложение не отвечает», Settings ок | React `<ViewTransition>` + `startTransition` на WebKitGTK; сайдбар без ViewTransition. Пересоберите frontend/AppImage |
-| Toast «Ошибка запроса» при живом `curl :11434` | Часто `think: true` на модели без thinking (Ollama: `does not support thinking`). UI больше не шлёт think по умолчанию; core делает один retry без `think`. Проверьте имя модели в настройках (`ollama list`). |
-| Windows: missing WebView2 | установить WebView2 Evergreen Runtime |
-| macOS: codesign / Gatekeeper при первом запуске | локальная unsigned debug/release сборка; notarize вне 5.2 |
-| Frontend dist пустой / 404 UI | сначала `npm run build` в `react-app` или довериться `beforeBuildCommand` |
+| AppImage: `fuse: failed to open /dev/fuse` | `fuse`/`fuse3`, user permissions, sometimes `./Underlator-….AppImage --appimage-extract-and-run` |
+| bundling: `Strip call failed` / `.relr.dyn` | On Fedora: `NO_STRIP=1` (and `APPIMAGE_EXTRACT_AND_RUN=1` when needed) before `cargo tauri build` |
+| Launch opens the AppImageLauncher dialog | `APPIMAGELAUNCHER_DISABLE=1` and/or `--appimage-extract-and-run` |
+| `GStreamer element appsink not found` | Host `gstreamer1-plugins-base` (often a warning without UI crash) |
+| Grey/blank window + `Failed to create GBM buffer` | WebKitGTK DMABUF; the Linux host sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` before the webview (see Tauri linux-graphics). Rebuild the AppImage after the fix. Manual run: `WEBKIT_DISABLE_DMABUF_RENDERER=1 ./….AppImage` |
+| "Chats" button → "application is not responding", Settings window | React `<ViewTransition>` + `startTransition` on WebKitGTK; the sidebar has no ViewTransition. Rebuild frontend/AppImage |
+| Toast "Request error" while `curl :11434` works | Often `think: true` on a model without thinking support (Ollama: `does not support thinking`). The UI no longer sends think by default; core retries once without `think`. Check the model name in settings (`ollama list`). |
+| Windows: missing WebView2 | install the WebView2 Evergreen Runtime |
+| macOS: codesign / Gatekeeper on first launch | local unsigned debug/release build; notarization is out of scope for 5.2 |
+| Empty frontend dist / 404 UI | run `npm run build` in `react-app` first or rely on `beforeBuildCommand` |
 
-## Команды: Dev и Release
+## Commands: Dev and Release
 
-Все команды ниже — из **корня репозитория**, если не указано иное. Feature host: **`desktop`**.
+All commands below run from the **repository root** unless stated otherwise. Host feature: **`desktop`**.
 
 ### Dev (`cargo tauri dev`)
 
 ```bash
-# deps: см. prerequisites; Ollama желательно уже слушает :11434
+# deps: see prerequisites; Ollama should preferably be listening on :11434
 cd crates/underlator-tauri
 cargo tauri dev --features desktop
 ```
 
-`beforeDevCommand` поднимает Vite (`npm run start` в `react-app`) на `http://localhost:5173`.
+`beforeDevCommand` starts Vite (`npm run start` in `react-app`) on `http://localhost:5173`.
 
-Ручной эквивалент без hook:
+Manual equivalent without the hook:
 
 ```bash
-# терминал 1
+# terminal 1
 cd react-app && npm run start
-# терминал 2
+# terminal 2
 cd crates/underlator-tauri && cargo tauri dev --features desktop
 ```
 
-### Release build (общий каркас)
+### Release build (common skeleton)
 
-`beforeBuildCommand` собирает `react-app` → `react-app/dist`. Можно и вручную:
+`beforeBuildCommand` builds `react-app` → `react-app/dist`. You can also do it manually:
 
 ```bash
 cd react-app && npm run build && cd ..
@@ -123,67 +125,67 @@ cd crates/underlator-tauri
 cargo tauri build --features desktop
 ```
 
-Затем rename к канону:
+Then rename to the canonical names:
 
 ```bash
 ./scripts/rename-desktop-artifacts.sh
-# dry-run без сборки:
+# dry-run without building:
 ./scripts/rename-desktop-artifacts.sh --dry-run
 ```
 
-Канонические имена (версия из `crates/underlator-tauri/tauri.conf.json`, сейчас **`0.1.0-beta`**):
+Canonical names (version from `crates/underlator-tauri/tauri.conf.json`, currently **`0.2.0-beta`**):
 
-| Платформа | Формат | Каноническое имя |
+| Platform | Format | Canonical name |
 | --- | --- | --- |
-| Linux x86_64 | AppImage | `Underlator-0.1.0-beta-linux-x86_64.AppImage` |
-| macOS arm64 | DMG | `Underlator-0.1.0-beta-macos-arm64.dmg` |
-| Windows 11 | portable zip с `.exe` | `Underlator-0.1.0-beta-win-x64-portable.zip` |
+| Linux x86_64 | AppImage | `Underlator-0.2.0-beta-linux-x86_64.AppImage` |
+| macOS arm64 | DMG | `Underlator-0.2.0-beta-macos-arm64.dmg` |
+| Windows 11 | portable zip with `.exe` | `Underlator-0.2.0-beta-win-x64-portable.zip` |
 
-**Не** DoD 5.2: `.deb`, MSI, NSIS — не считаются заменой AppImage / DMG / portable zip.
+**Not** part of DoD 5.2: `.deb`, MSI, NSIS — they are not a substitute for AppImage / DMG / portable zip.
 
-Выход rename-скрипта по умолчанию: `dist-desktop/`.
+The rename script writes to `dist-desktop/` by default.
 
 ### Linux: AppImage (Fedora 44)
 
 ```bash
   cd react-app && npm run build && cd ..
   cd crates/underlator-tauri
-  # Fedora 40+/44: linuxdeploy ship-strip не понимает ELF `.relr.dyn` → NO_STRIP=1
+  # Fedora 40+/44: linuxdeploy ship-strip does not understand ELF `.relr.dyn` → NO_STRIP=1
     NO_STRIP=1 APPIMAGE_EXTRACT_AND_RUN=1 \
       cargo tauri build --features desktop --bundles appimage
   cd ../..
-  # если CARGO_TARGET_DIR нестандартный — передайте --bundle-root
+  # if CARGO_TARGET_DIR is non-standard, pass --bundle-root
   ./scripts/rename-desktop-artifacts.sh
   ls -la dist-desktop/Underlator-*-linux-x86_64.AppImage
   chmod +x dist-desktop/Underlator-*-linux-x86_64.AppImage
-  # Запуск .AppImage
-  ./dist-desktop/Underlator-0.1.0-beta-linux-x86_64.AppImage --appimage-extract-and-run
-# альтернатива: extract → AppRun (тот же payload AppImage)
-#   ./Underlator-0.1.0-beta-linux-x86_64.AppImage --appimage-extract
+  # Run the .AppImage
+  ./dist-desktop/Underlator-0.2.0-beta-linux-x86_64.AppImage --appimage-extract-and-run
+# alternative: extract → AppRun (same AppImage payload)
+#   ./Underlator-0.2.0-beta-linux-x86_64.AppImage --appimage-extract
 #   APPIMAGELAUNCHER_DISABLE=1 UNDERLATOR_DATA_DIR=/tmp/u ./squashfs-root/AppRun
 ```
 
-Опциональный живой MVP smoke внутри host (те же thin handlers, что invoke; против локального Ollama, не mock):
+Optional live MVP smoke inside the host (the same thin handlers as invoke; against a local Ollama, not a mock):
 
 ```bash
 UNDERLATOR_ACCEPTANCE_SMOKE=1 \
 UNDERLATOR_SMOKE_MODEL=qwen2.5:0.5b \
 UNDERLATOR_DATA_DIR=/tmp/underlator-smoke \
 APPIMAGELAUNCHER_DISABLE=1 \
-  ./dist-desktop/Underlator-0.1.0-beta-linux-x86_64.AppImage --appimage-extract-and-run
+  ./dist-desktop/Underlator-0.2.0-beta-linux-x86_64.AppImage --appimage-extract-and-run
 # → $UNDERLATOR_DATA_DIR/acceptance-smoke.json (all_ok)
 ```
 
-Smoke против локального Ollama (обязательный gate 5.2 — **не** заменяется `tauri dev` / unit-mock):
+Smoke against a local Ollama (mandatory gate 5.2 — **not** replaced by `tauri dev` / unit mocks):
 
-1. Запустить Ollama: `ollama serve` (или systemd), URL `http://127.0.0.1:11434`
-2. Запустить канонический AppImage
-3. UI → транспорт Tauri (`TauriTransport`)
-4. MVP: `model` (list / generate+progress / stop; install/remove по окружению), `catalog` (get/search/getModelInfo), `chat` (CRUD + addMessage + persist)
+1. Start Ollama: `ollama serve` (or systemd), URL `http://127.0.0.1:11434`
+2. Launch the canonical AppImage
+3. UI → Tauri transport (`TauriTransport`)
+4. MVP: `model` (list / generate+progress / stop; install/remove depending on the environment), `catalog` (get/search/getModelInfo), `chat` (CRUD + addMessage + persist)
 
-### macOS arm64: DMG (пошагово)
+### macOS arm64: DMG (step by step)
 
-На машине **Apple Silicon**:
+On an **Apple Silicon** machine:
 
 ```bash
 rustup target add aarch64-apple-darwin
@@ -192,14 +194,14 @@ cd crates/underlator-tauri
 cargo tauri build --features desktop --target aarch64-apple-darwin --bundles dmg
 cd ../..
 ./scripts/rename-desktop-artifacts.sh
-open dist-desktop/Underlator-0.1.0-beta-macos-arm64.dmg
+open dist-desktop/Underlator-0.2.0-beta-macos-arm64.dmg
 ```
 
-После монтирования DMG — перенести приложение в Applications (или запустить из тома) и выполнить тот же MVP smoke vs локальный Ollama.
+After mounting the DMG, move the application to Applications (or run it from the volume) and perform the same MVP smoke against a local Ollama.
 
-### Windows 11: portable zip (пошагово)
+### Windows 11: portable zip (step by step)
 
-В `tauri.conf.json` targets **не** включают NSIS/MSI как DoD. На Windows достаточно release `.exe`, затем упаковка в portable zip:
+In `tauri.conf.json` the targets **do not** include NSIS/MSI as DoD. On Windows a release `.exe` is enough, then pack it into a portable zip:
 
 ```bash
 cd react-app && npm run build && cd ..
@@ -207,10 +209,10 @@ cd crates/underlator-tauri
 cargo tauri build --features desktop --no-bundle
 cd ../..
 ./scripts/rename-desktop-artifacts.sh
-# → dist-desktop/Underlator-0.1.0-beta-win-x64-portable.zip
+# → dist-desktop/Underlator-0.2.0-beta-win-x64-portable.zip
 ```
 
-PowerShell-альтернатива упаковки, если bash/zip недоступны:
+PowerShell alternative for packing when bash/zip are unavailable:
 
 ```powershell
 $exe = Get-ChildItem -Recurse -Filter underlator-tauri.exe target, crates\underlator-tauri\target |
@@ -218,27 +220,27 @@ $exe = Get-ChildItem -Recurse -Filter underlator-tauri.exe target, crates\underl
   Select-Object -First 1
 New-Item -ItemType Directory -Force dist-desktop | Out-Null
 Copy-Item $exe.FullName dist-desktop\Underlator.exe
-Compress-Archive -Path dist-desktop\Underlator.exe -DestinationPath dist-desktop\Underlator-0.1.0-beta-win-x64-portable.zip -Force
+Compress-Archive -Path dist-desktop\Underlator.exe -DestinationPath dist-desktop\Underlator-0.2.0-beta-win-x64-portable.zip -Force
 ```
 
-Распаковать zip → запустить `Underlator.exe` → MVP smoke vs Ollama.
+Unpack the zip → run `Underlator.exe` → MVP smoke against Ollama.
 
-## Матрица verified / unverified
+## verified / unverified matrix
 
-| Артефакт | Статус | Примечание |
+| Artifact | Status | Note |
 | --- | --- | --- |
-| Fedora Workstation 44 · `Underlator-*-linux-x86_64.AppImage` | **verified** | Жёсткий gate 5.2: канонический AppImage + UI + живой MVP smoke vs Ollama (`acceptance-smoke.json`, `all_ok`); не `tauri dev` / не mock |
-| macOS arm64 · `Underlator-*-macos-arm64.dmg` | **unverified** | Docs + команды выше; нет машины агента |
-| Windows 11 · `Underlator-*-win-x64-portable.zip` | **unverified** | Docs + команды выше; нет машины агента |
+| Fedora Workstation 44 · `Underlator-*-linux-x86_64.AppImage` | **verified** | Hard gate 5.2: canonical AppImage + UI + live MVP smoke vs Ollama (`acceptance-smoke.json`, `all_ok`); not `tauri dev` / not a mock |
+| macOS arm64 · `Underlator-*-macos-arm64.dmg` | **unverified** | Docs + commands above; no agent machine |
+| Windows 11 · `Underlator-*-win-x64-portable.zip` | **unverified** | Docs + commands above; no agent machine |
 
-Статусы macOS/Windows **не** ослабляют Linux AppImage gate.
+The macOS/Windows statuses **do not** weaken the Linux AppImage gate.
 
-## Закрытый исторический gate 5.2
+## Closed historical gate 5.2
 
-Перед атомом 7.1 были подтверждены все доказательства gate:
+Before atom 7.1 all gate evidence was confirmed:
 
-1. Канонический AppImage на **Fedora Workstation 44** прошёл живой MVP smoke vs локальный Ollama; `acceptance-smoke.json` содержит `all_ok`
-2. Этот документ содержит команды для macOS arm64 DMG и Windows portable zip
-3. Матрица выше зафиксировала фактические статусы (`verified` / `unverified`)
+1. The canonical AppImage on **Fedora Workstation 44** passed a live MVP smoke against a local Ollama; `acceptance-smoke.json` contains `all_ok`
+2. This document contains commands for the macOS arm64 DMG and the Windows portable zip
+3. The matrix above recorded the actual statuses (`verified` / `unverified`)
 
-Закрытый gate остаётся историческим доказательством поставки; он не заменяется `tauri dev` или unit/mock и не меняет текущую матрицу проверки.
+The closed gate remains historical delivery evidence; it is not replaced by `tauri dev` or unit/mock tests and does not change the current verification matrix.
