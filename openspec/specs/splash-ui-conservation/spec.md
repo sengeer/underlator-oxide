@@ -24,7 +24,8 @@
 - **AND** MUST перейти к основному UI через no-op bootstrap или эквивалентную консервацию входных точек
 
 ### Requirement: Splash entry points are conserved not deleted
-Входные точки splash-цепочки (`SplashScreen` в `pages/main`, gating через `selectSplashVisible` / `selectSplashScreenState`, API `splash-screen-ipc` / вызовы `splash.*`, подписки на status/progress/complete/error, связанные dispatch/thunk) SHALL быть отключены на входной точке (comment-out / early-return / feature-flag), а не удалены. Каждая отключённая входная точка MUST иметь маркер `// TODO(splash): restore when rust-core/desktop splash lifecycle exists` (или эквивалентный `TODO(splash)` с пояснением).
+
+Входные точки splash-цепочки (`SplashScreen` в `pages/main`, gating через `selectSplashVisible` / `selectSplashScreenState`, API `splash-screen-ipc` / вызовы `splash.*`, подписки на status/progress/complete/error, связанные dispatch/thunk) SHALL быть отключены на входной точке (comment-out / early-return / feature-flag), а не удалены. Каждая отключённая входная точка MUST иметь маркер `// TODO(splash): restoration not planned; requires new change + ADR update` (или эквивалентный `TODO(splash)` с той же семантикой).
 
 #### Scenario: SplashScreen mount path is disabled
 - **WHEN** разработчик инспектирует `Main` / mount path splash overlay
@@ -36,6 +37,11 @@
 - **THEN** MUST NOT быть обязательных живых подписок на `splash.onStatusUpdate` / `onProgressUpdate` / `onComplete` / `onError`, без которых UI не показывается
 - **AND** код API/slice MAY оставаться с `TODO(splash)`
 
+#### Scenario: Marker semantics block casual restoration
+- **WHEN** разработчик читает маркер `TODO(splash)` у отключённой входной точки
+- **THEN** текст MUST сообщать, что восстановление не планируется
+- **AND** MUST требовать нового change и обновления ADR до возврата splash UI
+
 ### Requirement: Splash modules remain as stubs
 Модули splash (компонент, Redux slice, API, типы, константы, стили) SHALL NOT удаляться подчистую в этом атоме. Они MUST оставаться в дереве исходников как заготовки для будущего desktop splash lifecycle. Типы `window.electron.splash` в declarations MAY сохраняться.
 
@@ -45,12 +51,13 @@
 - **AND** MUST NOT быть массового удаления splash-дерева как единственной меры консервации
 
 ### Requirement: Conserved splash code is discoverable via TODO markers
-Все отключённые splash-входные точки этого атома SHALL быть помечены маркером `TODO(splash)` (включая варианты с пояснением после двоеточия). Поиск по репозиторию `TODO(splash)` MUST находить заготовки.
+
+Все отключённые splash-входные точки SHALL оставаться помеченными маркером `TODO(splash)` (включая пояснение после двоеточия). Маркер MUST означать «restoration not planned, requires new change + ADR update», а не «restore when lands». Поиск по репозиторию `TODO(splash)` MUST находить заготовки.
 
 #### Scenario: Repository search finds splash stubs
 - **WHEN** разработчик выполняет поиск `TODO(splash)` по репозиторию
 - **THEN** MUST находиться маркеры у отключённых входных точек splash (как минимум Main/overlay gate и IPC/bootstrap path)
-- **AND** маркер MUST указывать на восстановление после появления rust-core/desktop splash lifecycle
+- **AND** маркер MUST указывать на необходимость нового change и обновления ADR, а не на ожидание будущего lifecycle
 
 ### Requirement: Splash-related i18n does not break startup
 Хук `use-electron-translation` и i18n-строки, связанные со splash / Electron menu sync, SHALL NOT ломать старт приложения после консервации splash. Вызов синхронизации переводов при монтировании MUST оставаться безопасным no-op или best-effort при отсутствии Electron splash/menu API.

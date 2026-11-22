@@ -74,11 +74,15 @@ Workflow `ci.yml`:
 
 | Job | Runner | Содержание |
 | --- | --- | --- |
-| `frontend` | матрица `ubuntu-24.04`, `macos-14`, `windows-latest` | Node 22 + npm cache, `HUSKY=0`; `npm run type:check` → `lint` → `test` → `build` |
+| `frontend` | матрица `ubuntu-24.04`, `macos-latest`, `windows-latest` | Node 22 + npm cache, `HUSKY=0`; `npm run type:check` → `lint` → `test` → `build` |
 | `rust` | та же матрица | stable + cache; `cargo check --workspace`; `cargo test -p underlator-core` (включая architecture); `cargo clippy -p underlator-core -- -D warnings` |
 | `tauri-check` | только `ubuntu-24.04` | native deps (`libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `patchelf`); `cargo check -p underlator-tauri --features desktop` |
 
 Триггеры — `push` и `pull_request`; `permissions: contents: read`. Frontend и Rust jobs не требуют native deps, поэтому идут на всех ОС. Tauri-check не входит в обязательную матрицу: без GTK/WebKit он не имеет смысла, но его падение видно как отдельный job. Кэш Rust — официальный `actions/cache@v4` по `~/.cargo/registry`, `~/.cargo/git` и `target` с ключом от `Cargo.lock`; сторонний rust-cache не добавляется без необходимости.
+
+**Метки macOS-раннеров (2026).** `macos-14` больше не provisioning-ится: GitHub отвечает `The configuration 'macos-14-arm64-us-default' is not supported`. Актуальные GitHub-hosted метки: arm64 — `macos-latest`, `macos-15`, `macos-26`; Intel — `macos-15-intel`, `macos-26-intel`. Используем `macos-latest` (arm64), чтобы не привязываться к версии macOS; job всё равно собирает `aarch64-apple-darwin`. Убирать macOS из матрицы не нужно — меняется только метка.
+
+**CI-стабилизация (следствие зелёного gate 7.7 на трёх ОС).** Чтобы `cargo check --workspace` и `cargo test -p underlator-core` проходили на раннерах без GTK/WebKit и на Windows, добавлены две точечные правки вне документации: (1) `crates/underlator-tauri/Cargo.toml` — `tauri-plugin-opener` становится `optional` и входит в фичу `desktop`, поэтому workspace-проверки без native deps не тянут плагин, а `tauri-check` по-прежнему проверяет desktop-сборку; (2) `crates/underlator-core/src/adapters/out/http/tests.rs` — тест недоступного endpoint допускает `CoreError::HttpTimeout` наряду с сетевыми/конфигурационными ошибками, потому что закрытый порт на Windows-раннере может приводить к таймауту. Продакшн-код, DTO, routes и commands не меняются; это плата за воспроизводимость CI, а не расширение функциональности.
 
 ### D8. Release: guard → draft → матрица ассетов, публикация вручную
 
@@ -94,7 +98,7 @@ Workflow `release.yml`:
 | Runner | Команда | Ассет |
 | --- | --- | --- |
 | `ubuntu-24.04` | `cargo tauri build --features desktop --bundles appimage` | `Underlator-<version>-linux-x86_64.AppImage` |
-| `macos-14` (arm64) | `cargo tauri build --features desktop --target aarch64-apple-darwin --bundles dmg` | `Underlator-<version>-macos-arm64.dmg` |
+| `macos-latest` (arm64) | `cargo tauri build --features desktop --target aarch64-apple-darwin --bundles dmg` | `Underlator-<version>-macos-arm64.dmg` |
 | `windows-latest` | `cargo tauri build --features desktop --no-bundle` + zip | `Underlator-<version>-win-x64-portable.zip` |
 
 `bundle.targets` остаётся `["appimage","dmg"]`; Windows собирается через `--no-bundle`, `.exe` упаковывается в zip. NSIS/MSI/`.deb` не добавляются. Канонические имена формируются явными шагами (CI знает точные пути сборки); `scripts/rename-desktop-artifacts.sh` остаётся ручным путём и не обязателен в CI.

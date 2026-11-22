@@ -8,7 +8,7 @@
 
 ### Requirement: Continuous integration quality gate
 
-GitHub Actions workflow `ci.yml` SHALL запускаться на `push` и `pull_request`, использовать `permissions: contents: read` и матрицу `ubuntu-24.04` / `macos-14` / `windows-latest`. Проверки frontend и Rust MUST выполняться на каждой ОС матрицы, а провал любой проверки MUST делать job неуспешным.
+GitHub Actions workflow `ci.yml` SHALL запускаться на `push` и `pull_request`, использовать `permissions: contents: read` и матрицу `ubuntu-24.04` / `macos-latest` (arm64) / `windows-latest`. Проверки frontend и Rust MUST выполняться на каждой ОС матрицы, а провал любой проверки MUST делать job неуспешным.
 
 #### Scenario: CI runs on push and pull request
 - **WHEN** workflow `ci.yml` присутствует в ветке по умолчанию
@@ -17,7 +17,7 @@ GitHub Actions workflow `ci.yml` SHALL запускаться на `push` и `pu
 
 #### Scenario: Matrix covers three operating systems
 - **WHEN** запускается `ci.yml`
-- **THEN** jobs MUST выполняться на `ubuntu-24.04`, `macos-14` и `windows-latest`
+- **THEN** jobs MUST выполняться на `ubuntu-24.04`, `macos-latest` и `windows-latest`
 - **AND** отсутствие одной из ОС в матрице MUST считаться нарушением контракта CI
 
 ### Requirement: Frontend checks with Node 22
@@ -91,7 +91,7 @@ Release job на теге `v*` SHALL создавать **draft** release и п�
 - **AND** прикрепить файл `Underlator-<version>-linux-x86_64.AppImage`
 
 #### Scenario: macOS job produces arm64 DMG
-- **WHEN** release job выполняется на `macos-14` (arm64)
+- **WHEN** release job выполняется на `macos-latest` (arm64)
 - **THEN** он MUST собрать `--features desktop --target aarch64-apple-darwin --bundles dmg`
 - **AND** прикрепить файл `Underlator-<version>-macos-arm64.dmg`
 

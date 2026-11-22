@@ -39,6 +39,6 @@
 - **Правила и заглушки:** `.rules/база.md`, `.rules/экскурсия.md`, `.rules/mvp-dual-mode-scope.md`, `openspec/config.yaml` (только `context`), `crates/underlator-tauri/src/stubs.rs`, `crates/underlator-core/src/domain/rag.rs` (только комментарии/rustdoc).
 - **Метаданные и версия:** `crates/underlator-tauri/tauri.conf.json`, `react-app/package.json`, `react-app/package-lock.json`, корневой `Cargo.toml`, `Cargo.lock`.
 - **UI:** только `react-app/src/pages/main/ui/about.tsx` и строки Lingui; без FSD-рефакторинга и новых зависимостей.
-- **CI/CD:** новые `.github/workflows/ci.yml` и `.github/workflows/release.yml`; workflow-файлов в репозитории сейчас нет.
+- **CI/CD:** новые `.github/workflows/ci.yml` и `.github/workflows/release.yml`; workflow-файлов в репозитории сейчас нет. Стабилизация зелёного gate на трёх ОС требует двух точечных правок: `crates/underlator-tauri/Cargo.toml` (плагин `tauri-plugin-opener` → `optional`, входит в фичу `desktop`) и `crates/underlator-core/src/adapters/out/http/tests.rs` (тест допускает `HttpTimeout` на платформах, где закрытый порт фильтруется); продакшн-код core не меняется.
 - **Репозиторий:** `.gitignore` получает точечные `!`-исключения для tracked ADR и RU-доки; `git check-ignore` подтверждает отслеживаемость.
 - **Не затрагивается:** бизнес-логика `underlator-core`, DTO, routes, commands, `docker/`, консервированные RAG/splash модули и маркеры, `openspec/changes/archive/**`, тело/журнал V1-плана, `bundle.targets`; релиз не публикуется, тег не создаётся.

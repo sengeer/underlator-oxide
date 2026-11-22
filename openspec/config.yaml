@@ -9,6 +9,9 @@ context: |
   Backend: Rust core + Tauri 2 (desktop) + Axum server (docker).
   One react-app for both modes. No separate git repos for backend.
   MVP API surface: model + catalog + chat from OpenSpec mvp-api-contract and DTO underlator-core/src/domain/.
+  Plan V1 is CLOSED at 7.1 (2026-11-22): historical plan in .docs/ARCHITECTURAL_PLAN_TAURI_RUST_DUAL_MODE_V1.md.
+  Source of truth for the contract: OpenSpec mvp-api-contract + DTO underlator-core/src/domain/.
+  Post-migration product decisions live in docs/adr/. Plan V2 is not created.
   Strict code rules: minimal big-O cost; SOLID; testable/maintainable/extensible; rustdoc in Russian.
   Core MUST NOT depend on tauri/axum. Hosts are thin driving adapters only.
 
