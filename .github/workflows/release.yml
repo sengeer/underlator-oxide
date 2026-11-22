@@ -105,7 +105,7 @@ jobs:
           - runner: ubuntu-24.04
             platform: linux
             asset_suffix: linux-x86_64.AppImage
-          - runner: macos-14
+          - runner: macos-latest
             platform: macos
             asset_suffix: macos-arm64.dmg
           - runner: windows-latest
