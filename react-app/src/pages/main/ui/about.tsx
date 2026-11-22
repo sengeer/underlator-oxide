@@ -72,6 +72,12 @@ function About({ isOpened, setOpened }: AboutProps) {
         </div>
         <h2 className='text-heading-m about__title'>Underlator</h2>
         <p className='text-body-m about__text'>{`v${packageJson.version}`}</p>
+        <p className='text-body-m about__text'>
+          <Trans>
+            Confidential translator and document assistant powered by local
+            LLMs.
+          </Trans>
+        </p>
         <TextButton
           text={'github'}
           onClick={() =>
@@ -79,6 +85,17 @@ function About({ isOpened, setOpened }: AboutProps) {
           }
           TextButton
         />
+        <p className='text-body-m about__text'>
+          <Trans>archived Electron version:</Trans>
+          &nbsp;
+          <TextButton
+            text={'sengeer/underlator'}
+            onClick={() =>
+              handleOpenExternal('https://github.com/sengeer/underlator')
+            }
+            TextButton
+          />
+        </p>
         <p className='text-body-m about__text'>
           <Trans>author:</Trans>
           &nbsp;
@@ -96,6 +113,10 @@ function About({ isOpened, setOpened }: AboutProps) {
             onClick={() => handleOpenExternal('mailto:fox8911@gmail.com')}
             TextButton
           />
+        </p>
+        <p className='text-body-m about__text'>
+          <Trans>license:</Trans>
+          &nbsp; BSD-3-Clause + Branding
         </p>
         <p className='text-body-m about__text'>
           <CopyrightIcon />

@@ -145,6 +145,10 @@ msgstr "API configuration"
 msgid "arabic"
 msgstr "arabic"
 
+#: src/pages/main/ui/about.tsx
+msgid "archived Electron version:"
+msgstr "archived Electron version:"
+
 #: src/widgets/chat/ui/chat.tsx
 msgid "ask "
 msgstr "ask "
@@ -198,12 +202,16 @@ msgid "chinese"
 msgstr "chinese"
 
 #: src/widgets/settings/ui/settings.tsx
-msgid "chunk size"
-msgstr "chunk size"
+#~ msgid "chunk size"
+#~ msgstr "chunk size"
+
+#: src/pages/main/ui/about.tsx
+msgid "Confidential translator and document assistant powered by local LLMs."
+msgstr "Confidential translator and document assistant powered by local LLMs."
 
 #: src/widgets/settings/ui/settings.tsx
-msgid "contact"
-msgstr "contact"
+#~ msgid "contact"
+#~ msgstr "contact"
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Contact"
@@ -297,7 +305,6 @@ msgstr "Error when selecting a file"
 #: src/widgets/chat/ui/chat-sidebar.tsx
 msgid "Failed to delete chat"
 msgstr "Failed to delete chat"
-
 
 #: src/widgets/pdf-viewer/ui/custom-error-message.tsx
 msgid "failed to load PDF file"
@@ -399,6 +406,10 @@ msgstr "khmer"
 #: src/shared/lib/hooks/use-translation-languages/use-translation-languages.ts
 msgid "korean"
 msgstr "korean"
+
+#: src/pages/main/ui/about.tsx
+msgid "license:"
+msgstr "license:"
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Loading App..."

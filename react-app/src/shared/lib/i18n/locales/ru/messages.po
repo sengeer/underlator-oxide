@@ -145,6 +145,10 @@ msgstr "API конфигурация"
 msgid "arabic"
 msgstr "Арабский"
 
+#: src/pages/main/ui/about.tsx
+msgid "archived Electron version:"
+msgstr "архивная Electron-версия:"
+
 #: src/widgets/chat/ui/chat.tsx
 msgid "ask "
 msgstr "Спросить "
@@ -196,6 +200,10 @@ msgstr "Чаты"
 #: src/shared/lib/hooks/use-translation-languages/use-translation-languages.ts
 msgid "chinese"
 msgstr "Китайский"
+
+#: src/pages/main/ui/about.tsx
+msgid "Confidential translator and document assistant powered by local LLMs."
+msgstr "Конфиденциальный переводчик и помощник по документам на локальных LLM."
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Contact"
@@ -390,6 +398,10 @@ msgstr "Кхмерский"
 #: src/shared/lib/hooks/use-translation-languages/use-translation-languages.ts
 msgid "korean"
 msgstr "Корейский"
+
+#: src/pages/main/ui/about.tsx
+msgid "license:"
+msgstr "Лицензия:"
 
 #: src/shared/lib/hooks/use-electron-translation/use-electron-translation.ts
 msgid "Loading App..."
