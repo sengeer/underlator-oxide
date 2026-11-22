@@ -1,6 +1,6 @@
 {
   "name": "underlator",
-  "version": "0.1.0-beta",
+  "version": "0.2.0-beta",
   "private": true,
   "homepage": "./",
   "description": "Frontend application for working with local LLMs",
@@ -12,7 +12,7 @@
   "license": "BSD-3-Clause + Branding",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sengeer/underlator.git"
+    "url": "https://github.com/sengeer/underlator-oxide.git"
   },
   "funding": {
     "type": "individual",

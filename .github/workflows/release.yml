@@ -1,0 +1,217 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  HUSKY: 0
+
+jobs:
+  guard:
+    name: Version guard
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      is_tag: ${{ steps.version.outputs.is_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version and compare tag
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          version="$(python3 -c 'import json; print(json.load(open("crates/underlator-tauri/tauri.conf.json"))["version"])')"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Build-only dispatch: version $version from tauri.conf.json; no tag guard."
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "is_tag=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tag="$REF_NAME"
+          tag_version="${tag#v}"
+          echo "Tag: $tag; tauri.conf.json version: $version"
+          if [ "$tag_version" != "$version" ]; then
+            echo "::error::Tag version '$tag_version' does not match tauri.conf.json '$version'."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "is_tag=true" >> "$GITHUB_OUTPUT"
+
+  create-draft:
+    name: Create draft release
+    needs: guard
+    if: needs.guard.outputs.is_tag == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create or reuse draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.guard.outputs.tag }}
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          state="$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>/dev/null || echo missing)"
+          case "$state" in
+            true)
+              echo "Draft release $TAG already exists; reusing it."
+              ;;
+            false)
+              echo "::error::Release $TAG exists and is already published; refusing to modify it."
+              exit 1
+              ;;
+            *)
+              gh release create "$TAG" \
+                --draft \
+                --title "Underlator $VERSION" \
+                --notes "Draft release for Underlator $VERSION. A green CI build is not platform verification: macOS and Windows remain unverified until a manual smoke. Publishing this draft is manual."
+              ;;
+          esac
+
+  build:
+    name: build (${{ matrix.runner }})
+    needs: [guard, create-draft]
+    if: >-
+      always() &&
+      needs.guard.result == 'success' &&
+      (needs.create-draft.result == 'success' || needs.create-draft.result == 'skipped')
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux
+            asset_suffix: linux-x86_64.AppImage
+          - runner: macos-14
+            platform: macos
+            asset_suffix: macos-arm64.dmg
+          - runner: windows-latest
+            platform: windows
+            asset_suffix: win-x64-portable.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: react-app/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: react-app
+        run: npm ci
+
+      - name: Install tauri-cli 2.x
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Install Linux native dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Add macOS arm64 target
+        if: matrix.platform == 'macos'
+        run: rustup target add aarch64-apple-darwin
+
+      - name: Build AppImage
+        if: matrix.platform == 'linux'
+        working-directory: crates/underlator-tauri
+        shell: bash
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          set -euo pipefail
+          cargo tauri build --features desktop --bundles appimage
+          asset="Underlator-${VERSION}-linux-x86_64.AppImage"
+          found="$(find ../../target -type f -name '*.AppImage' -path '*bundle/appimage*' | head -n 1)"
+          test -n "$found"
+          mkdir -p ../../dist
+          cp "$found" "../../dist/${asset}"
+
+      - name: Build macOS arm64 DMG
+        if: matrix.platform == 'macos'
+        working-directory: crates/underlator-tauri
+        shell: bash
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          set -euo pipefail
+          cargo tauri build --features desktop --target aarch64-apple-darwin --bundles dmg
+          asset="Underlator-${VERSION}-macos-arm64.dmg"
+          found="$(find ../../target -type f -name '*.dmg' -path '*bundle/dmg*' | head -n 1)"
+          test -n "$found"
+          mkdir -p ../../dist
+          cp "$found" "../../dist/${asset}"
+
+      - name: Build Windows portable zip
+        if: matrix.platform == 'windows'
+        working-directory: crates/underlator-tauri
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          cargo tauri build --features desktop --no-bundle
+          $exe = Get-ChildItem -Path ../../target -Filter underlator-tauri.exe -Recurse |
+            Where-Object { $_.FullName -match '\\release\\' } |
+            Select-Object -First 1
+          if (-not $exe) { throw "underlator-tauri.exe not found" }
+          New-Item -ItemType Directory -Force ../../dist | Out-Null
+          $asset = "Underlator-$env:VERSION-win-x64-portable.zip"
+          Compress-Archive -Path $exe.FullName -DestinationPath "../../dist/$asset" -Force
+
+      - name: Attach asset to draft release
+        if: needs.guard.outputs.is_tag == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.guard.outputs.tag }}
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          set -euo pipefail
+          asset="Underlator-${VERSION}-${{ matrix.asset_suffix }}"
+          test -f "dist/${asset}"
+          gh release upload "$TAG" "dist/${asset}" --clobber
+
+      - name: Upload workflow artifact
+        if: needs.guard.outputs.is_tag != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Underlator-${{ needs.guard.outputs.version }}-${{ matrix.asset_suffix }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: State that CI build is not verification
+        shell: bash
+        run: |
+          echo "CI build is not platform verification: macOS and Windows remain unverified until a manual smoke. The draft release is published manually." >> "$GITHUB_STEP_SUMMARY"

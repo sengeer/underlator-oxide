@@ -5014,7 +5014,7 @@ dependencies = [
 
 [[package]]
 name = "underlator-core"
-version = "0.1.0"
+version = "0.2.0-beta"
 dependencies = [
  "arch-lint",
  "async-trait",
@@ -5033,7 +5033,7 @@ dependencies = [
 
 [[package]]
 name = "underlator-server"
-version = "0.1.0"
+version = "0.2.0-beta"
 dependencies = [
  "async-trait",
  "axum",
@@ -5053,7 +5053,7 @@ dependencies = [
 
 [[package]]
 name = "underlator-tauri"
-version = "0.1.0"
+version = "0.2.0-beta"
 dependencies = [
  "async-trait",
  "futures-util",
