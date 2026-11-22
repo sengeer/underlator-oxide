@@ -159,8 +159,14 @@ async fn unreachable_endpoint_maps_to_network_or_config() {
         .send_json::<_, Value>(HttpMethod::Post, "/x", &json!({}))
         .await
         .expect_err("сеть");
+    // Семантика одна: недоступный endpoint — инфраструктурный сбой, а не HTTP-статус.
+    // На части платформ (например, Windows-раннеры) закрытый порт фильтруется и
+    // сетевая ошибка приходит как таймаут, поэтому оба класса допустимы.
     match err {
-        CoreError::HttpNetwork(_) | CoreError::HttpConfig(_) | CoreError::Internal(_) => {}
+        CoreError::HttpNetwork(_)
+        | CoreError::HttpConfig(_)
+        | CoreError::HttpTimeout
+        | CoreError::Internal(_) => {}
         other => panic!("ожидался сетевой/инфраструктурный сбой, получено {other:?}"),
     }
 }
