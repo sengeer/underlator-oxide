@@ -8,7 +8,6 @@ context: |
   Project: Underlator — confidential local-LLM translator/assistant.
   Backend: Rust core + Tauri 2 (desktop) + Axum server (docker).
   One react-app for both modes. No separate git repos for backend.
-  Architecture plan: .docs/ARCHITECTURAL_PLAN_TAURI_RUST_DUAL_MODE_V1.md
   MVP API surface: model + catalog + chat from OpenSpec mvp-api-contract and DTO underlator-core/src/domain/.
   Strict code rules: minimal big-O cost; SOLID; testable/maintainable/extensible; rustdoc in Russian.
   Core MUST NOT depend on tauri/axum. Hosts are thin driving adapters only.

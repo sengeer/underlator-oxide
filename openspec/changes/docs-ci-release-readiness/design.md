@@ -120,7 +120,7 @@ CI-сборка не является приёмкой: macOS/Windows остаю
 
 ### D12. V1 plan: только строка статуса
 
-В шапку `.docs/ARCHITECTURAL_PLAN_TAURI_RUST_DUAL_MODE_V1.md` добавляется `CLOSED at 7.1 (<дата>)`. Тело, этапы, журнал и `openspec/changes/archive/**` не редактируются; V2 не создаётся. `.docs` и `.rules` остаются вне git-отслеживания по существующей политике — правки в них локальные и не меняют `.gitignore` для этих каталогов.
+В шапку `.docs/ARCHITECTURAL_PLAN_TAURI_RUST_DUAL_MODE_V1.md` добавляется `CLOSED at 7.1 (<дата>)`. Тело, этапы, журнал и `openspec/changes/archive/**` не редактируются; V2 не создаётся. `.docs` и `.rules` остаются вне git-отслеживания по существующей политике — правки в них локальные и не меняют `.gitignore` для этих каталогов. Поэтому durable-часть указателей живёт в tracked `openspec/config.yaml`: в его `context` фиксируется CLOSED-статус V1, источник истины контракта (`mvp-api-contract` + DTO `underlator-core/src/domain/`) и `docs/adr/` как место post-migration решений; строка про ветку `migrate/rust-core` из `.rules/экскурсия.md` удаляется.
 
 ## Risks / Trade-offs
 
@@ -138,7 +138,7 @@ CI-сборка не является приёмкой: macOS/Windows остаю
 1. ADR + docs policy + `.gitignore` исключения; проверить `git check-ignore`.
 2. Версия `0.2.0-beta` во всех носителях + CHANGELOG-запись; `cargo check` обновляет lockfile.
 3. README/README_RU, EN/RU desktop-дока, About.
-4. Переклассификация `.rules`, `.docs`, stub-комментариев, V1-статус.
+4. Переклассификация `.rules`, `.docs`, `openspec/config.yaml` (context), stub-комментариев, V1-статус и указателей на план/ветку.
 5. CI workflow, затем release workflow; локальная YAML-валидация.
 6. Ручные gate: зелёный `ci.yml` после пуша ветки; draft release с тремя ассетами после пуша тега человеком.
 

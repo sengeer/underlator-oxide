@@ -60,6 +60,7 @@ Desktop-документация SHALL состоять из EN-канона `do
 #### Scenario: Legacy chat section does not imply RAG
 - **WHEN** читатель открывает раздел про перенос legacy-чатов
 - **THEN** текст MUST NOT подразумевать, что RAG доступен в текущем продукте
+- **AND** слово `RAG` MUST отсутствовать в `README.md` и `README_RU.md`; упоминание допустимо только в консервированном коде
 - **AND** перенос `chats/*.chat.json` MUST остаться описанным
 
 ### Requirement: Repository links target underlator-oxide
@@ -92,7 +93,7 @@ Desktop-документация SHALL состоять из EN-канона `do
 
 ### Requirement: Agent rules classify dropped and deferred
 
-`.rules/база.md`, `.rules/экскурсия.md` и `.rules/mvp-dual-mode-scope.md` SHALL классифицировать RAG как `deferred`, а splash и embedded Ollama как `dropped by ADR`, а не pending backlog. `.docs/AGENT_PROMPT_TEMPLATE.md` MUST ссылаться на `.docs/...` вместо битых `.cursor/docs/...`.
+`.rules/база.md`, `.rules/экскурсия.md` и `.rules/mvp-dual-mode-scope.md` SHALL классифицировать RAG как `deferred`, а splash и embedded Ollama как `dropped by ADR`. `openspec/config.yaml` (tracked, `context`) SHALL фиксировать CLOSED-статус V1, источник истины контракта и `docs/adr/`. `.docs/AGENT_PROMPT_TEMPLATE.md` MUST ссылаться на `.docs/...` вместо `.cursor/docs/...`.
 
 #### Scenario: Rules state the ADR classification
 - **WHEN** агент читает rules-файлы
@@ -103,6 +104,11 @@ Desktop-документация SHALL состоять из EN-канона `do
 - **WHEN** проверяются ссылки `.docs/AGENT_PROMPT_TEMPLATE.md`
 - **THEN** ссылки на план MUST вести на `.docs/ARCHITECTURAL_PLAN_TAURI_RUST_DUAL_MODE_V1.md`
 - **AND** битых ссылок `.cursor/docs/...` MUST NOT остаться
+
+#### Scenario: Config context and plan pointer are actual
+- **WHEN** агент читает `openspec/config.yaml` и `.rules/экскурсия.md`
+- **THEN** `context` MUST указывать CLOSED-статус V1, `docs/adr/` и источник истины контракта
+- **AND** ссылок на ветку `migrate/rust-core` MUST NOT остаться
 
 ### Requirement: Stub comments reflect ADR classification
 

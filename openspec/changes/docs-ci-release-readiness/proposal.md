@@ -15,7 +15,7 @@
 - Ввести единый источник версии `0.2.0-beta` (`crates/underlator-tauri/tauri.conf.json`) и синхронизировать `react-app/package.json`, `react-app/package-lock.json`, workspace `Cargo.toml` и `Cargo.lock`; добавить запись `## [0.2.0-beta]` в `CHANGELOG.md`, не переписывая историю `0.1.0-beta` (legacy Electron-релиз).
 - Добавить `ci.yml` (push + PR, матрица ubuntu/macos/windows, frontend + Rust + опциональный tauri-check с native deps) и `release.yml` (тег `v*` + `workflow_dispatch`, guard версии, draft release с тремя каноническими ассетами).
 - Обновить About: версия из `package.json`, описание, ссылка на `underlator-oxide`, отдельная строка про архивную Electron-версию, автор, контакт, лицензия и копирайт — через Lingui `Trans`, без новых зависимостей.
-- Переклассифицировать правила агентов и заглушки: `.rules/{база,экскурсия,mvp-dual-mode-scope}.md` и rustdoc/комментарии `stubs.rs` / `domain/rag.rs` описывают RAG как `deferred`, а splash/embedded Ollama как `dropped by ADR`, а не как pending backlog.
+- Переклассифицировать правила агентов и заглушки: `.rules/{база,экскурсия,mvp-dual-mode-scope}.md` и rustdoc/комментарии `stubs.rs` / `domain/rag.rs` описывают RAG как `deferred`, а splash/embedded Ollama как `dropped by ADR`, а не как pending backlog. Указатель на V1-план и несуществующую ветку `migrate/rust-core` в `.rules/экскурсия.md` заменяется, а `context` в tracked `openspec/config.yaml` фиксирует CLOSED-статус V1 и `docs/adr/` как место решений.
 - Исправить битые ссылки `.docs/AGENT_PROMPT_TEMPLATE.md` (`.cursor/docs/...` → `.docs/...`) и добавить tracked `docs/adr/` + `docs/DESKTOP_TAURI_RU.md` в исключения `.gitignore` с проверкой `git check-ignore`.
 
 ## Capabilities
@@ -36,7 +36,7 @@
 ## Impact
 
 - **Документация:** `README.md`, `README_RU.md`, `docs/DESKTOP_TAURI.md`, новый `docs/DESKTOP_TAURI_RU.md`, новый `docs/adr/*`, `CHANGELOG.md`, `.docs/AGENT_PROMPT_TEMPLATE.md`.
-- **Правила и заглушки:** `.rules/база.md`, `.rules/экскурсия.md`, `.rules/mvp-dual-mode-scope.md`, `crates/underlator-tauri/src/stubs.rs`, `crates/underlator-core/src/domain/rag.rs` (только комментарии/rustdoc).
+- **Правила и заглушки:** `.rules/база.md`, `.rules/экскурсия.md`, `.rules/mvp-dual-mode-scope.md`, `openspec/config.yaml` (только `context`), `crates/underlator-tauri/src/stubs.rs`, `crates/underlator-core/src/domain/rag.rs` (только комментарии/rustdoc).
 - **Метаданные и версия:** `crates/underlator-tauri/tauri.conf.json`, `react-app/package.json`, `react-app/package-lock.json`, корневой `Cargo.toml`, `Cargo.lock`.
 - **UI:** только `react-app/src/pages/main/ui/about.tsx` и строки Lingui; без FSD-рефакторинга и новых зависимостей.
 - **CI/CD:** новые `.github/workflows/ci.yml` и `.github/workflows/release.yml`; workflow-файлов в репозитории сейчас нет.
