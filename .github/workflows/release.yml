@@ -159,7 +159,7 @@ jobs:
           mkdir -p ../../dist
           cp "$found" "../../dist/${asset}"
 
-      - name: Build macOS arm64 DMG
+      - name: Build macOS arm64 app bundle
         if: matrix.platform == 'macos'
         working-directory: crates/underlator-tauri
         shell: bash
@@ -167,12 +167,44 @@ jobs:
           VERSION: ${{ needs.guard.outputs.version }}
         run: |
           set -euo pipefail
-          cargo tauri build --features desktop --target aarch64-apple-darwin --bundles dmg
+
+          cargo tauri build --features desktop --target aarch64-apple-darwin --bundles app
+
+          bundle_root="../../target/aarch64-apple-darwin/release/bundle/macos"
+          app="$(find "$bundle_root" -maxdepth 1 -name '*.app' -type d | head -n 1)"
+          test -n "$app"
+
+          echo "Bundle: $app"
+          du -sh "$app"
+          file "$app/Contents/MacOS/"*
+
+          binary="$app/Contents/MacOS/Underlator"
+          test -f "$binary"
+          size="$(stat -f%z "$binary")"
+          echo "Binary size: $size bytes"
+          test "$size" -gt 1000000
+
+          # Ad-hoc подпись: без Apple Developer ID неподписанный arm64-bundle
+          # после скачивания Gatekeeper помечает как «повреждённый».
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+
+          stage="$(mktemp -d)"
+          ditto "$app" "$stage/Underlator.app"
+          ln -s /Applications "$stage/Applications"
+
           asset="Underlator-${VERSION}-macos-arm64.dmg"
-          found="$(find ../../target -type f -name '*.dmg' -path '*bundle/dmg*' | head -n 1)"
-          test -n "$found"
           mkdir -p ../../dist
-          cp "$found" "../../dist/${asset}"
+          hdiutil create -volname "Underlator" -srcfolder "$stage" -ov -format UDZO "../../dist/${asset}"
+          ls -lh "../../dist/${asset}"
+
+          # DMG обязан содержать .app, а не пустой образ.
+          mkdir -p "$stage/mnt"
+          hdiutil attach "../../dist/${asset}" -nobrowse -readonly -mountpoint "$stage/mnt"
+          test -d "$stage/mnt/Underlator.app"
+          du -sh "$stage/mnt/Underlator.app"
+          hdiutil detach "$stage/mnt"
+          rm -rf "$stage"
 
       - name: Build Windows portable zip
         if: matrix.platform == 'windows'
